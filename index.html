@@ -401,7 +401,7 @@
 
       /* Live preview */
       .preview-skeleton {
-        border: 1px solid var(--line);
+        border: 1px solid var(--line-strong);
         border-radius: var(--radius);
         padding: 1.5rem;
         background: var(--raised);
@@ -416,6 +416,40 @@
       }
       .preview-skeleton .sk-text {
         font-size: 0.88rem; color: var(--muted); line-height: 1.6;
+      }
+      .sk-annot {
+        display: flex; gap: 0.8rem; align-items: flex-start;
+        min-width: 0;
+      }
+      .sk-annot-left {
+        flex: 1; min-width: 0;
+        display: flex; flex-direction: column; gap: 4px;
+      }
+      .sk-domain-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--dim);
+        min-height: 12px;
+      }
+      .sk-token-chips {
+        display: flex; flex-direction: column; gap: 3px;
+        flex-shrink: 0;
+        min-width: 0;
+        padding-top: 14px;
+      }
+      .sk-token-chip {
+        font-family: var(--mono);
+        font-size: 10px;
+        line-height: 1.4;
+        white-space: nowrap;
+        color: var(--dim);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .sk-token-chip .v {
+        color: var(--signal);
       }
       .preview-skeleton .sk-input {
         width: 100%;
@@ -442,6 +476,7 @@
         align-self: flex-start;
       }
       .preview-skeleton .sk-btn:active { transform: scale(0.97); }
+      .preview-skeleton .sk-btn:hover { filter: brightness(1.1); }
       .preview-skeleton .sk-card {
         padding: 1rem;
         background: var(--surface);
@@ -503,6 +538,9 @@
         .layout { padding: 0.6rem; }
         .panel { padding: 0.9rem; }
         .code-block pre { font-size: 11.5px; }
+        .sk-annot { flex-direction: column; }
+        .sk-token-chips { padding-top: 0; }
+        .sk-token-chip { white-space: normal; }
       }
     </style>
   </head>
@@ -587,13 +625,35 @@
         </div>
         <div class="preview-skeleton" id="previewSkeleton">
           <div class="sk-title">Preview surface</div>
-          <div class="sk-text">This skeleton reflects the compiled tokens. Press the button below to feel the principle.</div>
-          <input class="sk-input" type="text" placeholder="Input field" />
-          <button class="sk-btn" type="button">Press me ↳</button>
-          <div class="sk-card">
-            <div class="sk-card-title">Card</div>
-            <div class="sk-card-body">A container with the compiled radius, surface, and border tokens applied.</div>
+          <div class="sk-text">This skeleton reflects the compiled tokens. Press the button to feel the principle.</div>
+
+          <div class="sk-annot">
+            <div class="sk-annot-left">
+              <span class="sk-domain-label" id="skLabelInput"></span>
+              <input class="sk-input" type="text" placeholder="Input field" />
+            </div>
+            <div class="sk-token-chips" id="skChipsInput"></div>
           </div>
+
+          <div class="sk-annot">
+            <div class="sk-annot-left">
+              <span class="sk-domain-label" id="skLabelBtn"></span>
+              <button class="sk-btn" type="button">Press me ↳</button>
+            </div>
+            <div class="sk-token-chips" id="skChipsBtn"></div>
+          </div>
+
+          <div class="sk-annot">
+            <div class="sk-annot-left">
+              <span class="sk-domain-label" id="skLabelCard"></span>
+              <div class="sk-card">
+                <div class="sk-card-title">Card</div>
+                <div class="sk-card-body">A container with the compiled radius, surface, and border tokens applied.</div>
+              </div>
+            </div>
+            <div class="sk-token-chips" id="skChipsCard"></div>
+          </div>
+
           <div class="sk-notice" id="previewNotice">No tokens applied</div>
         </div>
       </div>
@@ -1756,10 +1816,10 @@
         }
 
         // Live preview — apply CSS vars
-        applyPreviewTokens(result.cssVars, result.domains);
+        applyPreviewTokens(result.cssVars, result.domains, result.tokens);
       }
 
-      function applyPreviewTokens(cssVars, domains) {
+      function applyPreviewTokens(cssVars, domains, tokens) {
         const sk = els.previewSkeleton;
         // Reset
         sk.style.removeProperty("--press-scale");
@@ -1780,11 +1840,38 @@
         const btn = sk.querySelector(".sk-btn");
         const input = sk.querySelector(".sk-input");
         const card = sk.querySelector(".sk-card");
+        const textEl = sk.querySelector(".sk-text");
 
         // Reset inline styles
         btn.style.cssText = "";
         input.style.cssText = "";
         card.style.cssText = "";
+        textEl.style.cssText = "";
+
+        // Clear previous chips and labels
+        ["skChipsBtn", "skChipsInput", "skChipsCard"].forEach(id => {
+          document.getElementById(id).innerHTML = "";
+        });
+        ["skLabelBtn", "skLabelInput", "skLabelCard"].forEach(id => {
+          document.getElementById(id).textContent = "";
+        });
+
+        // Helper: add token chips to a container
+        function addChips(containerId, domainTokens) {
+          if (!domainTokens) return;
+          const container = document.getElementById(containerId);
+          for (const [key, val] of Object.entries(domainTokens)) {
+            const chip = document.createElement("div");
+            chip.className = "sk-token-chip";
+            chip.innerHTML = escapeHtml(key) + ': <span class="v">' + escapeHtml(val) + '</span>';
+            container.appendChild(chip);
+          }
+        }
+
+        // Helper: set domain label
+        function setLabel(labelId, text) {
+          document.getElementById(labelId).textContent = text;
+        }
 
         // Motion domain
         if (domains.includes("motion")) {
@@ -1792,7 +1879,6 @@
           const pressDur = cssVars["--press-duration"] || "160ms";
           const ease = cssVars["--ease"] || "cubic-bezier(0.23, 1, 0.32, 1)";
           btn.style.transition = "transform " + pressDur + " " + ease;
-          // Apply the actual press scale on :active via a dynamic style
           let styleEl = document.getElementById("preview-motion-style");
           if (!styleEl) {
             styleEl = document.createElement("style");
@@ -1800,8 +1886,9 @@
             document.head.appendChild(styleEl);
           }
           styleEl.textContent = "#previewSkeleton .sk-btn:active { transform: scale(" + pressScale + "); }";
+          addChips("skChipsBtn", tokens.motion);
+          setLabel("skLabelBtn", "MOTION");
         } else {
-          // Remove the dynamic style if motion not present
           var styleEl2 = document.getElementById("preview-motion-style");
           if (styleEl2) styleEl2.textContent = "";
         }
@@ -1813,6 +1900,9 @@
           btn.style.borderRadius = radius;
           input.style.borderRadius = radiusSm;
           card.style.borderRadius = radiusSm;
+          card.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+          addChips("skChipsCard", tokens.shape);
+          setLabel("skLabelCard", domains.includes("color") ? "SHAPE · COLOR" : "SHAPE");
         }
 
         // Color domain
@@ -1820,6 +1910,13 @@
           const signal = cssVars["--signal"] || "#ffc400";
           btn.style.background = signal;
           btn.style.color = "#000";
+          if (!domains.includes("shape")) {
+            addChips("skChipsCard", tokens.color);
+            setLabel("skLabelCard", "COLOR");
+          } else {
+            // Merge color tokens into the card chips
+            addChips("skChipsCard", tokens.color);
+          }
         } else {
           btn.style.background = "var(--signal)";
           btn.style.color = "var(--signal-ink)";
@@ -1829,8 +1926,12 @@
         if (domains.includes("typography")) {
           const leading = cssVars["--leading"] || "1.55";
           const measure = cssVars["--measure"];
-          sk.querySelector(".sk-text").style.lineHeight = leading;
-          if (measure) sk.querySelector(".sk-text").style.maxWidth = measure;
+          textEl.style.lineHeight = leading;
+          textEl.style.WebkitFontSmoothing = "antialiased";
+          textEl.style.textRendering = "optimizeLegibility";
+          if (measure) textEl.style.maxWidth = measure;
+          addChips("skChipsInput", tokens.typography);
+          setLabel("skLabelInput", "TYPOGRAPHY");
         }
 
         // Interaction domain
@@ -1839,12 +1940,30 @@
           if (focus) {
             input.style.setProperty("--focus-ring", focus);
           }
+          // Add interaction chips to the button area (focus, touch target)
+          if (!domains.includes("motion")) {
+            addChips("skChipsBtn", tokens.interaction);
+            setLabel("skLabelBtn", "INTERACTION");
+          } else {
+            // Merge interaction chips alongside motion chips
+            addChips("skChipsBtn", tokens.interaction);
+            setLabel("skLabelBtn", "MOTION · INTERACTION");
+          }
+          // Also show focus on input
+          if (!domains.includes("typography")) {
+            setLabel("skLabelInput", "INTERACTION");
+          } else {
+            setLabel("skLabelInput", "TYPOGRAPHY · INTERACTION");
+          }
         }
 
         // Spacing domain
         if (domains.includes("spacing")) {
-          const sectionMin = cssVars["--section-min"] || "64px";
           sk.style.gap = "1.2rem";
+          if (tokens.spacing) {
+            // Spacing affects the whole skeleton — add chips to the card area
+            addChips("skChipsCard", tokens.spacing);
+          }
         }
 
         // Acoustic domain

@@ -612,7 +612,7 @@
          The engine is transparent and rule-based — not an AI box.
          ═══════════════════════════════════════════════════════════ */
 
-      /* ── Seed tokens (from Designesy DESIGN.md v0.2.0) ─────────── */
+      /* ── Seed tokens (from Designesy design system contract v0.2.0) ── */
       const SEED = {
         colors: {
           "foundation.black": "#000000",
@@ -1361,7 +1361,7 @@
             compiledTokens[domainId] = tokens;
             provenance.push({
               domain: domainId,
-              source: "Designesy DESIGN.md v0.2.0 §7 (tokens) + general design knowledge",
+              source: "Designesy design system contract v0.2.0 + general design knowledge",
               values: Object.keys(tokens),
             });
           }
@@ -1458,9 +1458,9 @@
         md += 'principle: "' + principle.replace(/"/g, '\\"') + '"\n';
         md += "source_authority:\n";
         md += '  high:\n';
-        md += '    - "D:\\\\DESIGNESY\\\\DESIGN.md"\n';
+        md += '    - "Designesy design system contract v0.2.0 — designesy.org"\n';
         md += '  contextual:\n';
-        md += '    - "D:\\\\VAI\\\\BRAND_ACTIVE\\\\DESIGN.md"\n';
+        md += '    - "Designesy Labs framework — designesy.org/labs"\n';
         md += "compiled_domains:\n";
         domains.forEach(d => { md += "  - " + d + "\n"; });
         md += "---\n\n";

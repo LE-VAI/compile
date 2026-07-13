@@ -1,0 +1,2006 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compile · VAI</title>
+    <meta
+      name="description"
+      content="Compile — a principle compiler. State a design principle, get a verifiable contract with tokens, anti-patterns, and a portable test script."
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://le-vai.github.io/compile/" />
+    <meta property="og:image" content="https://le-vai.github.io/compile/assets/og_1200x675.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://le-vai.github.io/compile/assets/og_1200x675.png" />
+    <link rel="canonical" href="https://le-vai.github.io/compile/" />
+    <meta property="og:title" content="Compile" />
+    <meta property="og:description" content="A principle compiler. State a principle, get a verifiable contract." />
+    <meta name="twitter:title" content="Compile" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --paper: #000000;
+        --surface: #050505;
+        --raised: #0c0c0c;
+        --raised-high: #121212;
+        --rail: #030303;
+        --ink: #ffffff;
+        --muted: #b3b3b3;
+        --dim: #7a7a7a;
+        --line: rgba(255, 255, 255, 0.1);
+        --line-strong: rgba(255, 255, 255, 0.18);
+        --faint: rgba(255, 255, 255, 0.05);
+        --signal: #ffc400;
+        --signal-ink: #000000;
+        --signal-soft: rgba(255, 196, 0, 0.12);
+        --shadow: 0 24px 64px rgba(0, 0, 0, 0.72);
+        --radius: 10px;
+        --radius-sm: 7px;
+        --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --dur-fast: 140ms;
+        --dur: 220ms;
+        --dur-slow: 360ms;
+        --pad: clamp(0.9rem, 2.4vw, 1.4rem);
+        --ui: clamp(12px, 1.1vw, 13px);
+        --focus: 0 0 0 2px var(--paper), 0 0 0 4px color-mix(in srgb, var(--signal) 55%, transparent);
+        --tap: 44px;
+        --mono: ui-monospace, "Cascadia Mono", "SF Mono", "JetBrains Mono", Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      :focus { outline: none; }
+      :focus-visible { outline: none; box-shadow: var(--focus); }
+
+      html, body {
+        margin: 0; padding: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+
+      .topbar {
+        position: sticky; top: 0; z-index: 50;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 1rem;
+        padding: 0.7rem var(--pad);
+        background: color-mix(in srgb, var(--paper) 88%, transparent);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--line);
+      }
+      .topbar .brand { display: flex; align-items: baseline; gap: 0.5rem; }
+      .topbar .brand strong { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; }
+      .topbar .brand .dot { color: var(--signal); }
+      .topbar .brand span {
+        font-family: var(--mono);
+        font-size: var(--ui);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--dim);
+      }
+      .topbar .tag {
+        font-family: var(--mono);
+        font-size: var(--ui);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--dim);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 920px;
+        margin: 0 auto;
+        padding: var(--pad);
+        gap: 1rem;
+      }
+
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 1.2rem;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .panel-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 0.8rem;
+      }
+      .panel-header h2 {
+        margin: 0;
+        font-size: 0.82rem;
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .panel-header .pill {
+        font-family: var(--mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 3px 8px;
+        border-radius: 99px;
+        background: var(--signal-soft);
+        color: var(--signal);
+        border: 1px solid color-mix(in srgb, var(--signal) 25%, transparent);
+      }
+
+      /* Input */
+      .input-panel textarea {
+        width: 100%;
+        max-width: 100%;
+        min-height: 72px;
+        resize: vertical;
+        background: var(--raised);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 1rem;
+        line-height: 1.5;
+        padding: 0.8rem 1rem;
+        transition: border-color var(--dur) var(--ease);
+      }
+      .input-panel textarea:focus {
+        border-color: color-mix(in srgb, var(--signal) 40%, transparent);
+      }
+      .input-panel textarea::placeholder { color: var(--dim); }
+
+      .examples {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin-top: 0.7rem;
+      }
+      .examples .chip {
+        font-family: var(--mono);
+        font-size: 11px;
+        text-transform: none;
+        letter-spacing: 0;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: var(--faint);
+        border: 1px solid var(--line);
+        color: var(--muted);
+        cursor: pointer;
+        transition: all var(--dur-fast) var(--ease);
+        white-space: nowrap;
+      }
+      .examples .chip:hover {
+        border-color: var(--line-strong);
+        color: var(--ink);
+        background: var(--raised);
+      }
+
+      .btn-row {
+        display: flex; gap: 0.6rem; align-items: center;
+        margin-top: 0.9rem;
+      }
+      .btn {
+        font-family: var(--sans);
+        font-size: 0.88rem;
+        font-weight: 600;
+        padding: 0.6rem 1.4rem;
+        border-radius: var(--radius-sm);
+        border: none;
+        cursor: pointer;
+        transition: transform var(--dur) var(--ease), background var(--dur) var(--ease), opacity var(--dur) var(--ease);
+      }
+      .btn:active { transform: scale(0.97); }
+      .btn-primary {
+        background: var(--signal);
+        color: var(--signal-ink);
+      }
+      .btn-primary:hover { background: color-mix(in srgb, var(--signal) 88%, white); }
+      .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+      .btn-ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--line);
+      }
+      .btn-ghost:hover { border-color: var(--line-strong); color: var(--ink); }
+      .btn-ghost:disabled { opacity: 0.35; cursor: not-allowed; }
+
+      /* Tabs */
+      .tabs {
+        display: flex; gap: 2px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 0.9rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .tab {
+        font-family: var(--mono);
+        font-size: var(--ui);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 0.55rem 0.9rem;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--dim);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+      }
+      .tab:hover { color: var(--muted); }
+      .tab.active {
+        color: var(--ink);
+        border-bottom-color: var(--signal);
+      }
+      .tab-panel { display: none; overflow: hidden; }
+      .tab-panel.active { display: block; }
+
+      /* Code output */
+      .code-block {
+        position: relative;
+        background: var(--rail);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        max-width: 100%;
+      }
+      .code-block pre {
+        margin: 0;
+        padding: 1rem 1.1rem;
+        overflow-x: auto;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--muted);
+        -webkit-overflow-scrolling: touch;
+        white-space: pre;
+        max-width: 100%;
+      }
+      .code-block pre .k { color: #79c0ff; }
+      .code-block pre .s { color: #ffa657; }
+      .code-block pre .c { color: var(--dim); font-style: italic; }
+      .code-block pre .h { color: var(--signal); }
+
+      .copy-btn {
+        position: absolute;
+        top: 6px; right: 6px;
+        font-family: var(--mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 4px 9px;
+        border-radius: 5px;
+        background: var(--raised-high);
+        border: 1px solid var(--line);
+        color: var(--muted);
+        cursor: pointer;
+        transition: all var(--dur-fast) var(--ease);
+        opacity: 0;
+      }
+      .code-block:hover .copy-btn { opacity: 1; }
+      .copy-btn:hover { color: var(--signal); border-color: var(--line-strong); }
+      .copy-btn.copied { color: var(--signal); }
+
+      .verify-instructions {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 0.8rem;
+        line-height: 1.5;
+      }
+      .verify-instructions code {
+        font-family: var(--mono);
+        font-size: 0.82em;
+        background: var(--faint);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--signal);
+      }
+
+      /* Review checklist */
+      .checklist { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+      .checklist li {
+        display: flex; gap: 0.7rem;
+        padding: 0.7rem 0.9rem;
+        background: var(--raised);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        font-size: 0.88rem;
+        line-height: 1.5;
+      }
+      .checklist li .num {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--signal);
+        font-weight: 600;
+        min-width: 20px;
+        padding-top: 1px;
+      }
+      .checklist li .body { flex: 1; }
+      .checklist li .body strong { color: var(--ink); font-weight: 600; }
+      .checklist li .body span { color: var(--muted); }
+
+      /* Anti-patterns list */
+      .anti-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+      .anti-list li {
+        display: flex; gap: 0.7rem; align-items: flex-start;
+        padding: 0.7rem 0.9rem;
+        background: var(--raised);
+        border: 1px solid var(--line);
+        border-left: 3px solid #e5534b;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        line-height: 1.5;
+      }
+      .anti-list li .x {
+        color: #e5534b;
+        font-weight: 700;
+        min-width: 16px;
+      }
+      .anti-list li .body { flex: 1; }
+      .anti-list li .body strong { color: var(--ink); }
+      .anti-list li .body .detect {
+        display: block;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--dim);
+        margin-top: 3px;
+      }
+
+      /* Empty state */
+      .empty {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--dim);
+        font-size: 0.9rem;
+      }
+      .empty .icon { font-size: 1.6rem; margin-bottom: 0.5rem; opacity: 0.5; }
+
+      /* Tensions */
+      .tensions {
+        margin-top: 0.8rem;
+        padding: 0.7rem 0.9rem;
+        background: color-mix(in srgb, #f0ad4e 6%, var(--raised));
+        border: 1px solid color-mix(in srgb, #f0ad4e 22%, transparent);
+        border-radius: var(--radius-sm);
+        font-size: 0.83rem;
+        color: #f0ad4e;
+      }
+      .tensions strong { color: #f0ad4e; }
+      .tensions ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+      .tensions li { color: var(--muted); margin-bottom: 2px; }
+
+      /* Domains detected */
+      .domain-tags {
+        display: flex; flex-wrap: wrap; gap: 5px;
+        margin-bottom: 0.8rem;
+      }
+      .domain-tag {
+        font-family: var(--mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 3px 8px;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--signal) 10%, var(--raised));
+        border: 1px solid color-mix(in srgb, var(--signal) 20%, transparent);
+        color: var(--signal);
+      }
+
+      /* Live preview */
+      .preview-skeleton {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        background: var(--raised);
+        display: flex; flex-direction: column; gap: 1rem;
+        transition: all var(--dur) var(--ease);
+        min-width: 0;
+        overflow: hidden;
+      }
+      .preview-skeleton .sk-title {
+        font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+      .preview-skeleton .sk-text {
+        font-size: 0.88rem; color: var(--muted); line-height: 1.6;
+      }
+      .preview-skeleton .sk-input {
+        width: 100%;
+        padding: 0.6rem 0.9rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 0.88rem;
+        transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+      }
+      .preview-skeleton .sk-input:focus { border-color: var(--signal); }
+      .preview-skeleton .sk-input:active { transform: scale(0.97); }
+      .preview-skeleton .sk-btn {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.6rem 1.4rem;
+        border-radius: var(--radius-sm);
+        border: none;
+        font-family: var(--sans);
+        font-size: 0.88rem; font-weight: 600;
+        cursor: pointer;
+        transition: transform var(--dur) var(--ease), background var(--dur) var(--ease);
+        align-self: flex-start;
+      }
+      .preview-skeleton .sk-btn:active { transform: scale(0.97); }
+      .preview-skeleton .sk-card {
+        padding: 1rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+      }
+      .preview-skeleton .sk-card .sk-card-title { font-size: 0.9rem; font-weight: 600; color: var(--ink); margin-bottom: 0.3rem; }
+      .preview-skeleton .sk-card .sk-card-body { font-size: 0.82rem; color: var(--muted); }
+      .preview-skeleton .sk-notice {
+        font-family: var(--mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--dim);
+        text-align: center;
+        padding-top: 0.3rem;
+      }
+
+      footer {
+        text-align: center;
+        padding: 2rem var(--pad) 1.5rem;
+        color: var(--dim);
+        font-size: 0.78rem;
+      }
+      footer .wordmark { color: var(--muted); }
+      footer .wordmark .dot { color: var(--signal); }
+      footer a { color: var(--dim); text-decoration: none; }
+      footer a:hover { color: var(--signal); }
+
+      .toast {
+        position: fixed; bottom: 1.2rem; left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        background: var(--signal);
+        color: var(--signal-ink);
+        padding: 0.6rem 1.2rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem; font-weight: 600;
+        font-family: var(--sans);
+        z-index: 100;
+        opacity: 0;
+        transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+        pointer-events: none;
+        box-shadow: var(--shadow);
+      }
+      .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+        }
+        .preview-skeleton .sk-btn:active { transform: none; }
+        .preview-skeleton .sk-input:active { transform: none; }
+        .btn:active { transform: none; }
+      }
+
+      @media (max-width: 640px) {
+        .topbar .tag { display: none; }
+        .layout { padding: 0.6rem; }
+        .panel { padding: 0.9rem; }
+        .code-block pre { font-size: 11.5px; }
+        .copy-btn { opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <strong>Compile</strong><span class="dot">.</span>
+        <span>principle compiler</span>
+      </div>
+      <div class="tag">Lab Four</div>
+    </header>
+
+    <div class="layout">
+      <!-- Input -->
+      <div class="panel input-panel">
+        <div class="panel-header">
+          <h2>State a design principle</h2>
+        </div>
+        <textarea id="principleInput" placeholder="e.g. Buttons should feel physical&#10;e.g. Text rhythm should hold at every size&#10;e.g. Color roles should not compete"></textarea>
+        <div class="examples" id="examples"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnCompile" type="button">Compile</button>
+          <button class="btn btn-ghost" id="btnDownload" type="button" disabled>Download</button>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="panel output-panel" id="outputPanel" style="display:none;">
+        <div class="panel-header">
+          <h2>Compiled contract</h2>
+          <span class="pill" id="domainsPill">—</span>
+        </div>
+        <div class="domain-tags" id="domainTags"></div>
+        <div class="tabs">
+          <button class="tab active" data-tab="contract">Contract</button>
+          <button class="tab" data-tab="verify">Verify</button>
+          <button class="tab" data-tab="review">Review</button>
+          <button class="tab" data-tab="anti">Anti-patterns</button>
+        </div>
+        <div class="tab-panel active" id="tab-contract">
+          <div class="code-block">
+            <button class="copy-btn" data-copy="contract">Copy</button>
+            <pre id="contractOutput"></pre>
+          </div>
+          <div id="tensionsBox" style="display:none;"></div>
+        </div>
+        <div class="tab-panel" id="tab-verify">
+          <div class="verify-instructions">
+            Paste this script into your browser console (<code>F12</code> → Console) on any live URL.
+            It checks the page against the compiled tokens and reports violations.
+          </div>
+          <div class="code-block">
+            <button class="copy-btn" data-copy="verify">Copy</button>
+            <pre id="verifyOutput"></pre>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-review">
+          <ul class="checklist" id="reviewOutput"></ul>
+        </div>
+        <div class="tab-panel" id="tab-anti">
+          <ul class="anti-list" id="antiOutput"></ul>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="panel" id="emptyPanel">
+        <div class="empty">
+          <div class="icon">◇</div>
+          <div>State a principle and compile it into a verifiable contract.</div>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div class="panel" id="previewPanel" style="display:none;">
+        <div class="panel-header">
+          <h2>Live preview</h2>
+          <span class="pill">compiled</span>
+        </div>
+        <div class="preview-skeleton" id="previewSkeleton">
+          <div class="sk-title">Preview surface</div>
+          <div class="sk-text">This skeleton reflects the compiled tokens. Interact to feel the principle.</div>
+          <input class="sk-input" type="text" placeholder="Input field" />
+          <button class="sk-btn" type="button">Button</button>
+          <div class="sk-card">
+            <div class="sk-card-title">Card</div>
+            <div class="sk-card-body">A container with the compiled radius, surface, and border tokens applied.</div>
+          </div>
+          <div class="sk-notice" id="previewNotice">No tokens applied</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="wordmark">vai<span class="dot">.</span> · <a href="https://le-vai.github.io/compile/">le-vai.github.io/compile</a></div>
+    </footer>
+
+    <div class="toast" id="toast">Copied</div>
+
+    <script>
+      "use strict";
+
+      /* ═══════════════════════════════════════════════════════════
+         COMPILE — principle compiler
+         Lab Four of the Designesy Labs framework.
+
+         A contract isn't documentation — it's a compiled artifact.
+         This tool compiles a plain-language design principle into:
+           1. A portable contract block (Markdown + YAML)
+           2. A portable verification script (JS, runs in any console)
+           3. A review checklist (8 Designesy dimensions)
+           4. Anti-patterns with detection rules
+
+         The engine is transparent and rule-based — not an AI box.
+         ═══════════════════════════════════════════════════════════ */
+
+      /* ── Seed tokens (from Designesy DESIGN.md v0.2.0) ─────────── */
+      const SEED = {
+        colors: {
+          "foundation.black": "#000000",
+          "surface.black": "#0A0A0A",
+          "text.primary": "#FFFFFF",
+          "text.secondary": "#A0A0A0",
+          "signal.blue": "#0133CB",
+          "activation.yellow": "#FECC34",
+          "border.subtle": "rgba(255, 255, 255, 0.16)",
+          "focus.ring": "#0133CB",
+          "accent": "#0133CB",
+        },
+        typography: {
+          "reference_display": "SF Pro Display",
+          "reference_text": "SF Pro Text",
+          "fallback": "-apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif",
+        },
+        motion: {
+          "ease.out": "cubic-bezier(0.23, 1, 0.32, 1)",
+          "ease.in_out": "cubic-bezier(0.77, 0, 0.175, 1)",
+          "ease.drawer": "cubic-bezier(0.32, 0.72, 0, 1)",
+          "duration.button_press": "100-160ms",
+          "duration.tooltip": "125-200ms",
+          "duration.dropdown": "150-250ms",
+          "duration.modal_drawer": "200-500ms",
+          "duration.ui_cap": "300ms",
+          "spring.default": "{ damping: 1.0, response: 0.4 }",
+          "press_feedback.scale": "0.97",
+          "press_feedback.duration": "160ms",
+          "stagger.interval": "30-80ms",
+          "entrance.min_scale": "0.9",
+          "entrance.default_scale": "0.95",
+        },
+        acoustic: {
+          "cue.nav_hover": "tick",
+          "cue.action_down": "press",
+          "cue.action_up": "release",
+          "cue.card_hover": "bloom",
+          "cue.list_hover": "whisper",
+          "cue.toggle": "toggle",
+          "cue.success": "success",
+          "cue.preference_key": "designesy:sound",
+          "cue.reduced_motion_proxy": true,
+        },
+        spacing: {
+          "base": "8px",
+          "section_min": "64px",
+        },
+        rounded: {
+          "sm": "4px",
+          "md": "8px",
+        },
+      };
+
+      /* ── Domain knowledge base ──────────────────────────────────
+         Each domain has:
+           - keywords: words/phrases that trigger this domain
+           - tokens: function(principle, context) → token object
+           - antiPatterns: array of { name, description, detect (JS string for verifier) }
+           - review: function(principle) → array of { dim, question }
+           - cssVars: function(tokens) → object of CSS custom properties
+           - verifierChecks: array of JS check-body strings for the verifier
+         ────────────────────────────────────────────────────────── */
+      const DOMAINS = {
+        motion: {
+          keywords: ["press","feel","physical","animate","animation","transition","ease","spring","stagger","entrance","settle","button","move","moving","motion","bounce","flow","slide","fade","responsive","tactile","haptic","snappy","sluggish","smooth"],
+          tokens(principle) {
+            const p = principle.toLowerCase();
+            const t = {};
+            // Press feedback
+            if (/\b(press|physical|tactile|haptic|feel|button|click|tap)\b/.test(p)) {
+              t["press_feedback.scale"] = SEED.motion["press_feedback.scale"];
+              t["press_feedback.duration"] = SEED.motion["press_feedback.duration"];
+              t["ease.out"] = SEED.motion["ease.out"];
+            }
+            // Entrance
+            if (/\b(entrance|appear|enter|load|open|reveal|mount)\b/.test(p)) {
+              t["entrance.default_scale"] = SEED.motion["entrance.default_scale"];
+              t["entrance.min_scale"] = SEED.motion["entrance.min_scale"];
+            }
+            // Stagger
+            if (/\b(stagger|sequence|list|items|cascade|rhythm|choreograph)\b/.test(p)) {
+              t["stagger.interval"] = SEED.motion["stagger.interval"];
+            }
+            // Duration cap (always relevant for motion)
+            t["duration.ui_cap"] = SEED.motion["duration.ui_cap"];
+            // Spring
+            if (/\b(spring|momentum|bounce|physics)\b/.test(p)) {
+              t["spring.default"] = SEED.motion["spring.default"];
+              t["spring.momentum"] = SEED.motion["spring.momentum"];
+            }
+            // Easing
+            if (/\b(ease|easing|smooth|calm|settle|flow)\b/.test(p)) {
+              t["ease.out"] = SEED.motion["ease.out"];
+              t["ease.in_out"] = SEED.motion["ease.in_out"];
+            }
+            return t;
+          },
+          antiPatterns(principle) {
+            const p = principle.toLowerCase();
+            const aps = [];
+            if (/\b(press|physical|tactile|button|feel|click|tap)\b/.test(p)) {
+              aps.push({
+                name: "Press without transform",
+                description: "Button changes color on :active but has no scale shift.",
+                detect: "Interactive element changes background on :active but has no transform on :active — press feedback is color-only, not physical.",
+              });
+              aps.push({
+                name: "Color-only feedback",
+                description: "Button relies solely on background-color change without haptic-scale feedback.",
+                detect: "Interactive element has :hover background change but no :active transform — the press doesn't feel physical.",
+              });
+            }
+            aps.push({
+              name: "Duration exceeds 300ms for UI",
+              description: "Any UI transition exceeds 300ms — feels sluggish, not physical.",
+              detect: "Any interactive element has transition-duration > 300ms — exceeds the UI cap, feels sluggish.",
+            });
+            if (/\b(entrance|appear|enter|load|open|reveal)\b/.test(p)) {
+              aps.push({
+                name: "Entrance from scale(0)",
+                description: "Element animates from scale(0) — appears from nothing, not physical.",
+                detect: "CSS keyframe or animation uses transform: scale(0) as a starting value — elements should enter from scale(0.9+), not scale(0).",
+              });
+            }
+            aps.push({
+              name: "No transition on interactive elements",
+              description: "Interactive elements have no transition — state changes are instant, not physical.",
+              detect: "Interactive element (button, link) has no transition property — state changes are instant jarring, not physical.",
+            });
+            return aps;
+          },
+          review(principle) {
+            return [
+              { dim: "Purpose", q: "Does the motion make the element's interactivity obvious?" },
+              { dim: "Clarity", q: "Is the scale shift perceptible without being jarring?" },
+              { dim: "Context", q: "Does it work on touch (no hover dependency) and keyboard (focus visible)?" },
+              { dim: "Inclusion", q: "Does reduced-motion replace scale with an opacity or color shift?" },
+              { dim: "System coherence", q: "Does it use the contract's easing token, not a custom curve?" },
+              { dim: "Durability", q: "Does the motion hold after thousands of interactions?" },
+              { dim: "Delight", q: "Does the physical feel earn its presence, or is it decoration?" },
+              { dim: "Responsibility", q: "Does the scale shift cause layout shift or visual instability?" },
+            ];
+          },
+          cssVars(tokens) {
+            const v = {};
+            if (tokens["press_feedback.scale"]) v["--press-scale"] = tokens["press_feedback.scale"];
+            if (tokens["press_feedback.duration"]) v["--press-duration"] = tokens["press_feedback.duration"];
+            if (tokens["ease.out"]) v["--ease"] = tokens["ease.out"];
+            if (tokens["duration.ui_cap"]) v["--ui-cap"] = tokens["duration.ui_cap"];
+            if (tokens["entrance.default_scale"]) v["--entrance-scale"] = tokens["entrance.default_scale"];
+            if (tokens["stagger.interval"]) v["--stagger"] = tokens["stagger.interval"];
+            return v;
+          },
+          verifierChecks: [
+            `    // Check: press feedback via transform
+    interactives.forEach(function(el, i) {
+      var style = getComputedStyle(el);
+      var activeTransform = getComputedStyle(el, ':active').transform;
+      var hasTransform = activeTransform && activeTransform !== 'none' && activeTransform !== 'matrix(1, 0, 0, 1, 0, 0)';
+      var transitionDur = parseFloat(style.transitionDuration) || 0;
+      if (!hasTransform && el.tagName === 'BUTTON') {
+        results.push({ el: i, pass: false, rule: 'Press without transform', detail: el.tagName.toLowerCase() + ' has no :active transform' });
+      }
+      if (transitionDur > 0.3) {
+        results.push({ el: i, pass: false, rule: 'Duration > 300ms', detail: transitionDur + 's exceeds UI cap' });
+      }
+      if (transitionDur === 0 && el.tagName === 'BUTTON') {
+        results.push({ el: i, pass: false, rule: 'No transition on interactive', detail: el.tagName.toLowerCase() + ' has no transition' });
+      }
+    });`,
+            `    // Check: entrance from scale(0)
+    try {
+      Array.prototype.forEach.call(document.styleSheets, function(sheet) {
+        try {
+          Array.prototype.forEach.call(sheet.cssRules, function(rule) {
+            if (rule.cssText && rule.cssText.indexOf('scale(0)') !== -1 && rule.cssText.indexOf('scale(0.') === -1) {
+              results.push({ el: -1, pass: false, rule: 'Entrance from scale(0)', detail: rule.cssText.slice(0, 100) });
+            }
+          });
+        } catch(e) {}
+      });
+    } catch(e) {}`,
+          ],
+        },
+
+        color: {
+          keywords: ["color","colour","palette","contrast","signal","accent","brand","role","foundation","surface","dark","light","background","foreground","hierarchy","saturat","vivid","muted","tone","hue","signal blue","activation yellow","compete","competing","text color","text.primary","text.secondary"],
+          tokens(principle) {
+            const p = principle.toLowerCase();
+            const t = {};
+            // Role assignment
+            t["colors.foundation.black"] = SEED.colors["foundation.black"];
+            t["colors.surface.black"] = SEED.colors["surface.black"];
+            t["colors.text.primary"] = SEED.colors["text.primary"];
+            t["colors.text.secondary"] = SEED.colors["text.secondary"];
+            // Signal vs accent
+            if (/\b(signal|system|trust|intelligence|blue)\b/.test(p)) {
+              t["colors.signal.blue"] = SEED.colors["signal.blue"];
+              t["colors.focus.ring"] = SEED.colors["focus.ring"];
+            }
+            if (/\b(accent|activation|yellow|energy|focus|active)\b/.test(p)) {
+              t["colors.activation.yellow"] = SEED.colors["activation.yellow"];
+            }
+            // Role competition
+            if (/\b(compete|competing|conflict|noise|dual|clash)\b/.test(p)) {
+              t["colors.signal.blue"] = SEED.colors["signal.blue"];
+              t["colors.activation.yellow"] = SEED.colors["activation.yellow"];
+            }
+            t["colors.border.subtle"] = SEED.colors["border.subtle"];
+            return t;
+          },
+          antiPatterns(principle) {
+            const p = principle.toLowerCase();
+            const aps = [];
+            if (/\b(compete|competing|conflict|noise|dual|clash|role)\b/.test(p)) {
+              aps.push({
+                name: "Dual signal colors",
+                description: "Two colors compete for the signal/accent role — visual noise.",
+                detect: "Two high-saturation colors (e.g. blue and yellow) both used as prominent accents in the same viewport — role competition.",
+              });
+              aps.push({
+                name: "Suppressed accent not suppressed",
+                description: "An accent color that should be suppressed on unified surfaces is still active.",
+                detect: "Activation yellow appears on a surface where signal blue is the dominant accent — dual-accent noise.",
+              });
+            }
+            aps.push({
+              name: "Insufficient text contrast",
+              description: "Text color against background fails WCAG AA (4.5:1 for body text).",
+              detect: "Computed text color vs background color contrast ratio < 4.5 — fails WCAG AA for body text.",
+            });
+            aps.push({
+              name: "Decorative color without role",
+              description: "A color is used without an assigned role (signal, accent, foundation, surface, text, border).",
+              detect: "A color value appears in computed styles but doesn't map to any role in the contract — decorative, not structural.",
+            });
+            return aps;
+          },
+          review(principle) {
+            return [
+              { dim: "Purpose", q: "Does each color serve a structural role (signal, accent, foundation, surface, text, border)?" },
+              { dim: "Clarity", q: "Is the primary action color discoverable and distinguishable from other colors?" },
+              { dim: "Context", q: "Do colors hold in different lighting conditions and device color spaces?" },
+              { dim: "Inclusion", q: "Does text contrast meet WCAG AA (4.5:1) at all sizes?" },
+              { dim: "System coherence", q: "Does it use the contract's color role tokens, not arbitrary hex values?" },
+              { dim: "Durability", q: "Will the palette hold across product evolution without needing rework?" },
+              { dim: "Delight", q: "Does the color earn its presence, or is it decoration?" },
+              { dim: "Responsibility", q: "Does high saturation cause visual fatigue or accessibility barriers?" },
+            ];
+          },
+          cssVars(tokens) {
+            const v = {};
+            if (tokens["colors.foundation.black"]) v["--paper"] = tokens["colors.foundation.black"];
+            if (tokens["colors.surface.black"]) v["--surface"] = tokens["colors.surface.black"];
+            if (tokens["colors.text.primary"]) v["--ink"] = tokens["colors.text.primary"];
+            if (tokens["colors.text.secondary"]) v["--muted"] = tokens["colors.text.secondary"];
+            if (tokens["colors.signal.blue"]) v["--signal-blue"] = tokens["colors.signal.blue"];
+            if (tokens["colors.activation.yellow"]) v["--signal"] = tokens["colors.activation.yellow"];
+            if (tokens["colors.border.subtle"]) v["--line"] = tokens["colors.border.subtle"];
+            return v;
+          },
+          verifierChecks: [
+            `    // Check: text contrast
+    textEls.forEach(function(el, i) {
+      var style = getComputedStyle(el);
+      var color = style.color;
+      var bg = style.backgroundColor;
+      if (color && bg && color !== 'rgba(0, 0, 0, 0)' && bg !== 'rgba(0, 0, 0, 0)') {
+        var ratio = contrastRatio(color, bg);
+        if (ratio < 4.5) {
+          results.push({ el: i, pass: false, rule: 'Insufficient text contrast', detail: 'Contrast ' + ratio.toFixed(1) + ':1 (need 4.5:1)' });
+        }
+      }
+    });`,
+          ],
+        },
+
+        typography: {
+          keywords: ["type","text","font","rhythm","line-height","line height","tracking","letter-spacing","measure","readable","readability","cadence","scale","size","heading","body","paragraph","leading","weight","smoothing","tabular","numbers","selection","wrap","column","width"],
+          tokens(principle) {
+            const p = principle.toLowerCase();
+            const t = {};
+            t["typography.fallback"] = SEED.typography["fallback"];
+            if (/\b(scale|size|heading|body|h1|h2|h3|ratio)\b/.test(p)) {
+              t["typography.scale"] = "1.250 (major third)";
+            }
+            if (/\b(line-height|leading|rhythm|vertical|cadence)\b/.test(p)) {
+              t["typography.line_height.body"] = "1.55";
+              t["typography.line_height.heading"] = "1.15";
+            }
+            if (/\b(tracking|letter-spacing|spacing|tight|loose)\b/.test(p)) {
+              t["typography.tracking.heading"] = "-0.02em";
+              t["typography.tracking.label"] = "0.08em";
+            }
+            if (/\b(measure|width|column|readable|paragraph|line.length)\b/.test(p)) {
+              t["typography.measure"] = "62ch";
+            }
+            if (/\b(smoothing|antialiased|rendering)\b/.test(p)) {
+              t["typography.smoothing"] = "antialiased";
+            }
+            if (/\b(tabular|numbers|figures|data|table)\b/.test(p)) {
+              t["typography.numeric"] = "tabular-nums";
+            }
+            if (/\b(wrap|text-wrap|balance|break)\b/.test(p)) {
+              t["typography.text_wrap"] = "pretty";
+            }
+            return t;
+          },
+          antiPatterns(principle) {
+            const p = principle.toLowerCase();
+            const aps = [];
+            aps.push({
+              name: "Line-height too tight for body text",
+              description: "Body text line-height < 1.4 — text feels cramped, rhythm breaks.",
+              detect: "Body text element has line-height < 1.4 — rhythm is too tight for comfortable reading.",
+            });
+            aps.push({
+              name: "Measure too wide",
+              description: "Text line length exceeds 75 characters — readability drops.",
+              detect: "Text block width > 75ch (or ~680px at 16px font) — exceeds optimal measure.",
+            });
+            if (/\b(tracking|letter-spacing|heading)\b/.test(p)) {
+              aps.push({
+                name: "Positive tracking on headings",
+                description: "Headings have positive letter-spacing — should be tight (-0.01em to -0.03em).",
+                detect: "Heading element has letter-spacing > 0 — headings should be tracked tight, not loose.",
+              });
+            }
+            aps.push({
+              name: "Fixed font size (no rem)",
+              description: "Font sizes in px instead of rem — doesn't scale with user preference.",
+              detect: "Element font-size in px instead of rem — doesn't respect user's browser font-size setting.",
+            });
+            return aps;
+          },
+          review(principle) {
+            return [
+              { dim: "Purpose", q: "Does the type rhythm serve the content's hierarchy and reading flow?" },
+              { dim: "Clarity", q: "Is the primary content readable at a glance, with clear size hierarchy?" },
+              { dim: "Context", q: "Does the type hold on different screen sizes, resolutions, and lighting?" },
+              { dim: "Inclusion", q: "Does text scale with user font-size preferences (rem, not px)?" },
+              { dim: "System coherence", q: "Does it use the contract's type scale ratio, not arbitrary sizes?" },
+              { dim: "Durability", q: "Will the rhythm hold when content changes (different lengths, languages)?" },
+              { dim: "Delight", q: "Does the type rhythm feel composed, not arbitrary?" },
+              { dim: "Responsibility", q: "Is body text size at least 16px (1rem) for accessibility?" },
+            ];
+          },
+          cssVars(tokens) {
+            const v = {};
+            if (tokens["typography.fallback"]) v["--font"] = tokens["typography.fallback"];
+            if (tokens["typography.line_height.body"]) v["--leading"] = tokens["typography.line_height.body"];
+            if (tokens["typography.tracking.heading"]) v["--track-heading"] = tokens["typography.tracking.heading"];
+            if (tokens["typography.measure"]) v["--measure"] = tokens["typography.measure"];
+            return v;
+          },
+          verifierChecks: [
+            `    // Check: line-height and measure
+    textEls.forEach(function(el, i) {
+      var style = getComputedStyle(el);
+      var lh = parseFloat(style.lineHeight) / parseFloat(style.fontSize);
+      if (lh && lh < 1.4 && el.offsetHeight > parseFloat(style.fontSize) * 2) {
+        results.push({ el: i, pass: false, rule: 'Line-height too tight', detail: 'line-height ' + lh.toFixed(2) + ' on multi-line text' });
+      }
+      var width = el.clientWidth;
+      var fontSize = parseFloat(style.fontSize);
+      var approxCh = Math.floor(width / (fontSize * 0.5));
+      if (approxCh > 80 && el.textContent.trim().length > 100) {
+        results.push({ el: i, pass: false, rule: 'Measure too wide', detail: '~' + approxCh + 'ch (recommended max 75ch)' });
+      }
+      if (style.fontSize.indexOf('px') !== -1 && el.textContent.trim().length > 50) {
+        results.push({ el: i, pass: false, rule: 'Fixed font size', detail: 'Uses px instead of rem' });
+      }
+    });`,
+          ],
+        },
+
+        spacing: {
+          keywords: ["spacing","gap","padding","margin","rhythm","grid","layout","breath","density","tight","loose","room","space","crowded","cramped","generous","section","stack","gap"],
+          tokens(principle) {
+            const p = principle.toLowerCase();
+            const t = {};
+            t["spacing.base"] = SEED.spacing["base"];
+            if (/\b(section|page|large|generous|breath|room)\b/.test(p)) {
+              t["spacing.section_min"] = SEED.spacing["section_min"];
+            }
+            if (/\b(tight|dense|compact|cramped|efficient)\b/.test(p)) {
+              t["spacing.base"] = "4px";
+            }
+            if (/\b(loose|generous|airy|spacious|breath)\b/.test(p)) {
+              t["spacing.base"] = "12px";
+              t["spacing.section_min"] = "96px";
+            }
+            return t;
+          },
+          antiPatterns(principle) {
+            return [
+              {
+                name: "Inconsistent spacing values",
+                description: "Spacing uses non-base-unit values (e.g. 7px, 13px) — rhythm breaks.",
+                detect: "Element padding/margin uses a value not divisible by the base spacing unit — breaks the spacing rhythm.",
+              },
+              {
+                name: "Insufficient section spacing",
+                description: "Sections separated by less than 64px — content blurs together.",
+                detect: "Vertical gap between major content sections < 64px — sections lack breathing room.",
+              },
+            ];
+          },
+          review(principle) {
+            return [
+              { dim: "Purpose", q: "Does the spacing create clear visual separation between content areas?" },
+              { dim: "Clarity", q: "Is the spacing rhythm perceptible — can the user feel sections, groups, and hierarchy?" },
+              { dim: "Context", q: "Does spacing hold on mobile without causing excessive scrolling?" },
+              { dim: "Inclusion", q: "Is spacing generous enough for touch targets (44px minimum)?" },
+              { dim: "System coherence", q: "Does it use the base spacing unit, not arbitrary values?" },
+              { dim: "Durability", q: "Will the spacing hold when content changes or grows?" },
+              { dim: "Delight", q: "Does the spacing feel composed and intentional, not random?" },
+              { dim: "Responsibility", q: "Does generous spacing cause unnecessary scrolling on small screens?" },
+            ];
+          },
+          cssVars(tokens) {
+            const v = {};
+            if (tokens["spacing.base"]) v["--space-base"] = tokens["spacing.base"];
+            if (tokens["spacing.section_min"]) v["--section-min"] = tokens["spacing.section_min"];
+            return v;
+          },
+          verifierChecks: [
+            `    // Check: spacing consistency
+    var baseUnit = 8;
+    document.querySelectorAll('*').forEach(function(el, i) {
+      if (i > 200) return;
+      var style = getComputedStyle(el);
+      ['paddingTop','paddingBottom','marginTop','marginBottom'].forEach(function(prop) {
+        var val = parseFloat(style[prop]);
+        if (val > 0 && val < 100 && val % baseUnit !== 0 && val % (baseUnit/2) !== 0) {
+          results.push({ el: i, pass: false, rule: 'Inconsistent spacing', detail: prop + ': ' + val + 'px (not on ' + baseUnit + 'px grid)' });
+        }
+      });
+    });`,
+          ],
+        },
+
+        shape: {
+          keywords: ["radius","corner","round","rounded","shape","edge","soft","sharp","pill","circle","square","curve","bevel","contour"],
+          tokens(principle) {
+            const p = principle.toLowerCase();
+            const t = {};
+            if (/\b(soft|round|rounded|gentle|warm|friendly|curve)\b/.test(p)) {
+              t["rounded.sm"] = "6px";
+              t["rounded.md"] = "12px";
+            } else if (/\b(sharp|precise|technical|tight|crisp|exact)\b/.test(p)) {
+              t["rounded.sm"] = "2px";
+              t["rounded.md"] = "4px";
+            } else {
+              t["rounded.sm"] = SEED.rounded["sm"];
+              t["rounded.md"] = SEED.rounded["md"];
+            }
+            if (/\b(pill|capsule|full|completely|rounded.full)\b/.test(p)) {
+              t["rounded.pill"] = "999px";
+            }
+            return t;
+          },
+          antiPatterns(principle) {
+            return [
+              {
+                name: "Inconsistent radii",
+                description: "Different border-radius values on same-type elements — visual inconsistency.",
+                detect: "Same-type elements (e.g. all buttons, all cards) have different border-radius values — radius inconsistency.",
+              },
+              {
+                name: "Pill radius on non-pill shapes",
+                description: "border-radius: 999px on a rectangular element — unintended pill shape.",
+                detect: "Element has border-radius: 999px but is not intended as a pill — over-rounding.",
+              },
+            ];
+          },
+          review(principle) {
+            return [
+              { dim: "Purpose", q: "Does the radius convey the right posture (soft vs technical)?" },
+              { dim: "Clarity", q: "Are same-type elements visually consistent in their radii?" },
+              { dim: "Context", q: "Do radii hold on different screen sizes without looking wrong at scale?" },
+              { dim: "Inclusion", q: "Do focus rings follow the element's radius?" },
+              { dim: "System coherence", q: "Does it use the contract's radius tokens, not arbitrary values?" },
+              { dim: "Durability", q: "Will the radius hold across content and layout changes?" },
+              { dim: "Delight", q: "Does the radius feel intentional, not decorative?" },
+              { dim: "Responsibility", q: "Does the radius cause clipping or overflow issues?" },
+            ];
+          },
+          cssVars(tokens) {
+            const v = {};
+            if (tokens["rounded.sm"]) v["--radius-sm"] = tokens["rounded.sm"];
+            if (tokens["rounded.md"]) v["--radius"] = tokens["rounded.md"];
+            if (tokens["rounded.pill"]) v["--radius-pill"] = tokens["rounded.pill"];
+            return v;
+          },
+          verifierChecks: [
+            `    // Check: radius consistency
+    var radii = {};
+    document.querySelectorAll('button, .btn, [role="button"]').forEach(function(el, i) {
+      var r = getComputedStyle(el).borderRadius;
+      radii[r] = (radii[r] || 0) + 1;
+    });
+    var uniqueRadii = Object.keys(radii).filter(function(k) { return k !== '0px' && k !== '0'; });
+    if (uniqueRadii.length > 2) {
+      results.push({ el: -1, pass: false, rule: 'Inconsistent radii', detail: uniqueRadii.length + ' different border-radius values on buttons' });
+    }`,
+          ],
+        },
+
+        interaction: {
+          keywords: ["hover","focus","press","touch","affordance","response","feedback","pointer","cursor","active","interactive","click","tap","disabled","loading","state","keyboard","tab","accessible","button","link","input","select","form","control","toggle","switch","activate","interaction","interact","engage","operable"],
+          tokens(principle) {
+            const p = principle.toLowerCase();
+            const t = {};
+            t["interaction.focus_ring"] = "0 0 0 2px var(--paper), 0 0 0 4px color-mix(in srgb, var(--signal) 55%, transparent)";
+            t["interaction.hover_transition"] = "background-color 140ms var(--ease)";
+            t["interaction.press_transition"] = "transform 160ms var(--ease)";
+            if (/\b(keyboard|tab|accessible|focus|a11y|accessibility)\b/.test(p)) {
+              t["interaction.focus_visible"] = "always visible";
+            }
+            if (/\b(touch|mobile|tap|pointer)\b/.test(p)) {
+              t["interaction.touch_target"] = "44px";
+            }
+            if (/\b(disabled|loading|state|inactive)\b/.test(p)) {
+              t["interaction.disabled_opacity"] = "0.4";
+            }
+            return t;
+          },
+          antiPatterns(principle) {
+            const aps = [];
+            aps.push({
+              name: "Focus not visible",
+              description: "Interactive element has no visible focus indicator — keyboard users can't navigate.",
+              detect: "Interactive element has no :focus-visible style — keyboard navigation is impossible.",
+            });
+            aps.push({
+              name: "Touch target too small",
+              description: "Interactive element smaller than 44×44px — hard to tap.",
+              detect: "Interactive element dimensions < 44px — fails touch target minimum.",
+            });
+            aps.push({
+              name: "Hover-only interaction",
+              description: "Interaction only available on :hover — touch users can't access it.",
+              detect: "Interaction behavior on :hover with no touch/keyboard alternative — excludes touch users.",
+            });
+            return aps;
+          },
+          review(principle) {
+            return [
+              { dim: "Purpose", q: "Is the interaction affordance clear — does the user know it's interactive?" },
+              { dim: "Clarity", q: "Is the feedback immediate and unambiguous?" },
+              { dim: "Context", q: "Does it work across input methods (mouse, touch, keyboard, voice)?" },
+              { dim: "Inclusion", q: "Is focus always visible? Are touch targets at least 44px?" },
+              { dim: "System coherence", q: "Does it use the contract's focus/hover/press tokens?" },
+              { dim: "Durability", q: "Does the interaction hold across states (loaded, disabled, loading, error)?" },
+              { dim: "Delight", q: "Does the response feel considered, not laggy or instant-jarring?" },
+              { dim: "Responsibility", q: "Does the interaction exclude any input method or ability?" },
+            ];
+          },
+          cssVars(tokens) {
+            const v = {};
+            if (tokens["interaction.focus_ring"]) v["--focus"] = tokens["interaction.focus_ring"];
+            if (tokens["interaction.hover_transition"]) v["--hover-trans"] = tokens["interaction.hover_transition"];
+            if (tokens["interaction.press_transition"]) v["--press-trans"] = tokens["interaction.press_transition"];
+            if (tokens["interaction.touch_target"]) v["--tap"] = tokens["interaction.touch_target"];
+            return v;
+          },
+          verifierChecks: [
+            `    // Check: focus visibility and touch targets
+    interactives.forEach(function(el, i) {
+      var rect = el.getBoundingClientRect();
+      if (rect.width < 44 || rect.height < 44) {
+        results.push({ el: i, pass: false, rule: 'Touch target too small', detail: el.tagName.toLowerCase() + ' is ' + Math.round(rect.width) + 'x' + Math.round(rect.height) + 'px (need 44px)' });
+      }
+      var focusStyle = getComputedStyle(el, ':focus-visible');
+      if (focusStyle.outline === 'none' && !focusStyle.boxShadow) {
+        results.push({ el: i, pass: false, rule: 'Focus not visible', detail: el.tagName.toLowerCase() + ' has no :focus-visible indicator' });
+      }
+    });`,
+          ],
+        },
+
+        acoustic: {
+          keywords: ["sound","audio","acoustic","noise","cue","click","tick","haptic","vibrate","audible","sonic","tone","pitch","volume","preference","quiet","silent"],
+          tokens(principle) {
+            const p = principle.toLowerCase();
+            const t = {};
+            t["acoustic.preference_key"] = SEED.acoustic["cue.preference_key"];
+            t["acoustic.reduced_motion_proxy"] = SEED.acoustic["cue.reduced_motion_proxy"];
+            if (/\b(press|button|click|tap|action)\b/.test(p)) {
+              t["acoustic.cue.action_down"] = SEED.acoustic["cue.action_down"];
+              t["acoustic.cue.action_up"] = SEED.acoustic["cue.action_up"];
+            }
+            if (/\b(hover|nav|menu|navigation)\b/.test(p)) {
+              t["acoustic.cue.nav_hover"] = SEED.acoustic["cue.nav_hover"];
+            }
+            if (/\b(card|panel|surface)\b/.test(p)) {
+              t["acoustic.cue.card_hover"] = SEED.acoustic["cue.card_hover"];
+            }
+            if (/\b(toggle|switch|checkbox)\b/.test(p)) {
+              t["acoustic.cue.toggle"] = SEED.acoustic["cue.toggle"];
+            }
+            if (/\b(success|complete|done|confirm)\b/.test(p)) {
+              t["acoustic.cue.success"] = SEED.acoustic["cue.success"];
+            }
+            return t;
+          },
+          antiPatterns(principle) {
+            return [
+              {
+                name: "Sound without preference opt-out",
+                description: "Audio cues play with no user preference key to disable them.",
+                detect: "Audio plays without checking a preference key — users can't opt out of sound.",
+              },
+              {
+                name: "Sound on every hover",
+                description: "Sound on every list/menu hover — sensory fatigue.",
+                detect: "Sound plays on :hover of list items — excessive, causes sensory fatigue.",
+              },
+              {
+                name: "No reduced-motion proxy",
+                description: "Sound doesn't respect reduced-motion preference — accessibility gap.",
+                detect: "Audio cues don't check prefers-reduced-motion proxy — sound should degrade when motion is reduced.",
+              },
+            ];
+          },
+          review(principle) {
+            return [
+              { dim: "Purpose", q: "Does the sound cue add meaningful signal, or is it decoration?" },
+              { dim: "Clarity", q: "Is the cue distinguishable from other sounds in the environment?" },
+              { dim: "Context", q: "Does the sound respect the user's environment (quiet office, public space)?" },
+              { dim: "Inclusion", q: "Can users disable sound? Is it reduced with motion preferences?" },
+              { dim: "System coherence", q: "Does it use the contract's cue mappings, not arbitrary sounds?" },
+              { dim: "Durability", q: "Will the sound hold up after thousands of repetitions without fatigue?" },
+              { dim: "Delight", q: "Does the sound earn its presence, or does it annoy?" },
+              { dim: "Responsibility", q: "Does the sound exclude users with hearing impairments (is there a visual proxy)?" },
+            ];
+          },
+          cssVars(tokens) {
+            return {}; // acoustic tokens don't map to CSS vars
+          },
+          verifierChecks: [
+            `    // Check: acoustic preference (heuristic — look for AudioContext or <audio> without preference check)
+    var hasAudio = document.querySelector('audio, [data-sound], [data-cue]') || window.AudioContext || window.webkitAudioContext;
+    if (hasAudio) {
+      var prefKey = localStorage.getItem('designesy:sound');
+      if (prefKey === null) {
+        results.push({ el: -1, pass: false, rule: 'Sound without preference opt-out', detail: 'Audio detected but no sound preference key found in localStorage' });
+      }
+    }`,
+          ],
+        },
+      };
+
+      /* ── Secondary mapping: UX/psychological concepts → domains ── */
+      const SECONDARY_MAP = {
+        "clarity": ["typography", "interaction"],
+        "confident": ["motion", "shape"],
+        "confidence": ["motion", "shape"],
+        "calm": ["motion", "spacing", "color"],
+        "anxiety": ["motion", "color"],
+        "trust": ["color", "spacing"],
+        "trustworthy": ["color", "spacing"],
+        "premium": ["spacing", "typography", "shape"],
+        "luxury": ["spacing", "typography", "shape"],
+        "playful": ["motion", "color", "shape"],
+        "serious": ["color", "typography", "spacing"],
+        "professional": ["color", "typography", "spacing"],
+        "accessible": ["interaction", "color", "typography"],
+        "accessibility": ["interaction", "color", "typography"],
+        "fast": ["motion"],
+        "snappy": ["motion"],
+        "smooth": ["motion"],
+        "clean": ["spacing", "typography"],
+        "minimal": ["spacing", "color", "shape"],
+        "modern": ["typography", "shape"],
+        "warm": ["color", "shape"],
+        "cold": ["color"],
+        "friendly": ["shape", "color"],
+        "authoritative": ["color", "typography"],
+        "sovereign": ["color", "typography", "spacing"],
+        "infrastructure": ["color", "spacing", "typography"],
+        "intelligent": ["color", "typography"],
+        "durable": ["spacing", "shape"],
+        "responsive": ["motion", "interaction"],
+      };
+
+      /* ── The compile function ─────────────────────────────────── */
+      function compile(principleText) {
+        const text = principleText.trim();
+        const lower = text.toLowerCase();
+        const words = lower.split(/\s+/);
+        const detectedDomains = [];
+        const tensions = [];
+
+        // Stage 2: classify — find which domains match
+        // Use word-boundary matching with optional plural support to avoid
+        // substring false positives while catching "entrances" from "entrance", etc.
+        function matchesKeyword(text, keyword) {
+          // Multi-word keywords: exact phrase match
+          if (keyword.indexOf(" ") !== -1) return text.indexOf(keyword) !== -1;
+          // Single word: word-boundary match with optional trailing s/es/ing/ed
+          const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const re = new RegExp("\\b" + escaped + "(?:s|es|ing|ed)?\\b", "i");
+          return re.test(text);
+        }
+        for (const [domainId, domain] of Object.entries(DOMAINS)) {
+          let matched = false;
+          for (const kw of domain.keywords) {
+            if (matchesKeyword(lower, kw)) { matched = true; break; }
+          }
+          if (matched) detectedDomains.push(domainId);
+        }
+
+        // Stage 3: secondary mapping — UX/psychological concepts
+        for (const [concept, domains] of Object.entries(SECONDARY_MAP)) {
+          if (matchesKeyword(lower, concept)) {
+            domains.forEach(d => {
+              if (!detectedDomains.includes(d)) detectedDomains.push(d);
+            });
+          }
+        }
+
+        // Tension: no domains detected
+        if (detectedDomains.length === 0) {
+          tensions.push("No design domains were recognized in this principle. Try using terms like press, color, rhythm, spacing, radius, focus, or sound.");
+          // Still produce a generic contract
+          detectedDomains.push("motion", "interaction");
+        } else if (detectedDomains.length >= 4) {
+          tensions.push("Many domains were detected (" + detectedDomains.join(", ") + "). The principle may be too broad — consider splitting into separate principles for sharper contracts.");
+        }
+
+        // Stage 4-7: derive tokens, anti-patterns, review, verifier
+        const compiledTokens = {};
+        const compiledAntiPatterns = [];
+        const compiledReview = [];
+        const compiledVerifierChecks = [];
+        const compiledCssVars = {};
+        const provenance = [];
+
+        for (const domainId of detectedDomains) {
+          const domain = DOMAINS[domainId];
+          const tokens = domain.tokens(text);
+          if (Object.keys(tokens).length > 0) {
+            compiledTokens[domainId] = tokens;
+            provenance.push({
+              domain: domainId,
+              source: "Designesy DESIGN.md v0.2.0 §7 (tokens) + general design knowledge",
+              values: Object.keys(tokens),
+            });
+          }
+          const aps = domain.antiPatterns(text);
+          aps.forEach(ap => {
+            ap.domain = domainId;
+            compiledAntiPatterns.push(ap);
+          });
+          const rev = domain.review(text);
+          rev.forEach(r => {
+            r.domain = domainId;
+            compiledReview.push(r);
+          });
+          const cssV = domain.cssVars(tokens);
+          Object.assign(compiledCssVars, cssV);
+          domain.verifierChecks.forEach(c => {
+            compiledVerifierChecks.push({ domain: domainId, code: c });
+          });
+        }
+
+        // Deduplicate anti-patterns by name
+        const seenAp = new Set();
+        const dedupedAp = compiledAntiPatterns.filter(ap => {
+          if (seenAp.has(ap.name)) return false;
+          seenAp.add(ap.name); return true;
+        });
+
+        // Deduplicate review by dim+q
+        const seenRev = new Set();
+        const dedupedRev = compiledReview.filter(r => {
+          const key = r.dim + "|" + r.q;
+          if (seenRev.has(key)) return false;
+          seenRev.add(key); return true;
+        });
+
+        // Generate contract name from principle
+        const contractName = generateName(text);
+
+        // Assemble contract markdown
+        const contractMd = assembleContract({
+          name: contractName,
+          principle: text,
+          domains: detectedDomains,
+          tokens: compiledTokens,
+          antiPatterns: dedupedAp,
+          review: dedupedRev,
+          provenance,
+          tensions,
+        });
+
+        // Assemble verification script
+        const verifyJs = assembleVerifier({
+          name: contractName,
+          principle: text,
+          domains: detectedDomains,
+          checks: compiledVerifierChecks,
+          antiPatterns: dedupedAp,
+        });
+
+        // Assemble CSS tokens file
+        const tokensCss = assembleCssTokens(compiledCssVars);
+
+        return {
+          name: contractName,
+          principle: text,
+          domains: detectedDomains,
+          tokens: compiledTokens,
+          antiPatterns: dedupedAp,
+          review: dedupedRev,
+          provenance,
+          tensions,
+          contractMd,
+          verifyJs,
+          tokensCss,
+          cssVars: compiledCssVars,
+        };
+      }
+
+      function generateName(text) {
+        // Title-case the principle, truncate
+        const words = text.split(/\s+/).slice(0, 6);
+        let name = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        name = name.replace(/^(Should|Must|Always|Never)\s+/i, "");
+        return name || "Untitled Principle";
+      }
+
+      function assembleContract(ctx) {
+        const { name, principle, domains, tokens, antiPatterns, review, provenance, tensions } = ctx;
+        let md = "---\n";
+        md += 'name: "' + name + '"\n';
+        md += 'version: 0.1.0\n';
+        md += 'status: proposal\n';
+        md += 'type: portable-design-contract\n';
+        md += 'principle: "' + principle.replace(/"/g, '\\"') + '"\n';
+        md += "source_authority:\n";
+        md += '  high:\n';
+        md += '    - "D:\\\\DESIGNESY\\\\DESIGN.md"\n';
+        md += '  contextual:\n';
+        md += '    - "D:\\\\VAI\\\\BRAND_ACTIVE\\\\DESIGN.md"\n';
+        md += "compiled_domains:\n";
+        domains.forEach(d => { md += "  - " + d + "\n"; });
+        md += "---\n\n";
+        md += "# " + name + "\n\n";
+        md += "## Principle\n";
+        md += principle + "\n\n";
+        md += "Agent rule: this principle was compiled into structural tokens. Every token value below was derived from the principle's intent and the Designesy contract source. Verify on any live URL using the compiled verification script.\n\n";
+
+        md += "## Tokens\n";
+        for (const [domain, toks] of Object.entries(tokens)) {
+          if (Object.keys(toks).length === 0) continue;
+          md += domain + ":\n";
+          for (const [key, val] of Object.entries(toks)) {
+            md += "  " + key + ': "' + val + '"\n';
+          }
+          md += "\n";
+        }
+
+        md += "## Anti-patterns\n";
+        if (antiPatterns.length === 0) {
+          md += "- None detected for this principle.\n\n";
+        } else {
+          antiPatterns.forEach(ap => {
+            md += "- **" + ap.name + "**: " + ap.description + "\n";
+            md += "  - *Detection*: " + ap.detect + "\n";
+          });
+          md += "\n";
+        }
+
+        md += "## Verification\n";
+        md += "Run the compiled verification script (verify.js) in any browser console on any live URL. The script checks computed styles against the tokens above and runs the anti-pattern detectors. Output is a structured pass/fail report.\n\n";
+
+        md += "## Review checklist\n";
+        // Deduplicate review dimensions, keep first occurrence
+        const seenDims = new Set();
+        let dimNum = 1;
+        review.forEach(r => {
+          if (seenDims.has(r.dim)) return;
+          seenDims.add(r.dim);
+          md += dimNum + ". **" + r.dim + "**: " + r.q + "\n";
+          dimNum++;
+        });
+        md += "\n";
+
+        md += "## Provenance\n";
+        provenance.forEach(p => {
+          md += "- **" + p.domain + "**: " + p.source + "\n";
+          md += "  - Tokens: " + p.values.join(", ") + "\n";
+        });
+        md += "\n";
+
+        md += "## Open tensions\n";
+        if (tensions.length === 0) {
+          md += "- None. Principle resolved across " + domains.join(" + ") + ".\n";
+        } else {
+          tensions.forEach(t => { md += "- " + t + "\n"; });
+        }
+
+        return md;
+      }
+
+      function assembleVerifier(ctx) {
+        const { name, principle, domains, checks, antiPatterns } = ctx;
+        let js = "// " + name + " — verification script\n";
+        js += "// Compiled from: \"" + principle + "\"\n";
+        js += "// Paste into your browser console on any live URL to verify this principle.\n";
+        js += "(function() {\n";
+        js += "  var results = [];\n";
+        js += "  var interactives = document.querySelectorAll('button, [role=\"button\"], .btn, a[href]');\n";
+        js += "  var textEls = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, span, div');\n";
+        js += "\n";
+        js += "  // Contrast helper\n";
+        js += "  function contrastRatio(c1, c2) {\n";
+        js += "    function lum(c) {\n";
+        js += "      var m = c.match(/\\d+/g);\n";
+        js += "      if (!m) return 0;\n";
+        js += "      var r = parseInt(m[0])/255, g = parseInt(m[1])/255, b = parseInt(m[2])/255;\n";
+        js += "      r = r <= 0.03928 ? r/12.92 : Math.pow((r+0.055)/1.055, 2.4);\n";
+        js += "      g = g <= 0.03928 ? g/12.92 : Math.pow((g+0.055)/1.055, 2.4);\n";
+        js += "      b = b <= 0.03928 ? b/12.92 : Math.pow((b+0.055)/1.055, 2.4);\n";
+        js += "      return 0.2126*r + 0.7152*g + 0.0722*b;\n";
+        js += "    }\n";
+        js += "    var l1 = lum(c1), l2 = lum(c2);\n";
+        js += "    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n";
+        js += "  }\n";
+        js += "\n";
+        // Insert domain checks
+        checks.forEach(c => {
+          js += c.code + "\n";
+        });
+        js += "\n";
+        js += "  // Report\n";
+        js += "  var fails = results.filter(function(r) { return !r.pass; });\n";
+        js += "  var status = fails.length === 0 ? 'PASS' : 'FAIL';\n";
+        js += "  var color = fails.length === 0 ? '#0f0' : '#f00';\n";
+        js += "  console.log('%c ' + name + ' — ' + status, 'font-weight:bold;color:' + color);\n";
+        js += "  console.log('Checked ' + interactives.length + ' interactive elements, ' + textEls.length + ' text elements.');\n";
+        js += "  if (fails.length) {\n";
+        js += "    console.group('Violations (' + fails.length + ')');\n";
+        js += "    fails.forEach(function(f) { console.log('  ✗ ' + f.rule + ': ' + f.detail); });\n";
+        js += "    console.groupEnd();\n";
+        js += "  } else {\n";
+        js += "    console.log('All checks passed.');\n";
+        js += "  }\n";
+        js += "  return results;\n";
+        js += "})();\n";
+        return js;
+      }
+
+      function assembleCssTokens(cssVars) {
+        let css = ":root {\n";
+        for (const [key, val] of Object.entries(cssVars)) {
+          css += "  " + key + ": " + val + ";\n";
+        }
+        css += "}\n";
+        return css;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+         UI WIRING
+         ═══════════════════════════════════════════════════════════ */
+      const els = {
+        input: document.getElementById("principleInput"),
+        btnCompile: document.getElementById("btnCompile"),
+        btnDownload: document.getElementById("btnDownload"),
+        outputPanel: document.getElementById("outputPanel"),
+        emptyPanel: document.getElementById("emptyPanel"),
+        previewPanel: document.getElementById("previewPanel"),
+        contractOutput: document.getElementById("contractOutput"),
+        verifyOutput: document.getElementById("verifyOutput"),
+        reviewOutput: document.getElementById("reviewOutput"),
+        antiOutput: document.getElementById("antiOutput"),
+        domainsPill: document.getElementById("domainsPill"),
+        domainTags: document.getElementById("domainTags"),
+        tensionsBox: document.getElementById("tensionsBox"),
+        examples: document.getElementById("examples"),
+        toast: document.getElementById("toast"),
+        previewSkeleton: document.getElementById("previewSkeleton"),
+        previewNotice: document.getElementById("previewNotice"),
+        tabs: document.querySelectorAll(".tab"),
+        tabPanels: document.querySelectorAll(".tab-panel"),
+        copyBtns: document.querySelectorAll(".copy-btn"),
+      };
+
+      let lastCompiled = null;
+      const STORAGE_KEY = "vai-compile-draft-v1";
+
+      // Example principles
+      const EXAMPLES = [
+        "Buttons should feel physical",
+        "Text rhythm should hold at every size",
+        "Color roles should not compete",
+        "Spacing should breathe",
+        "Focus must always be visible",
+        "Entrances should never appear from nothing",
+      ];
+      EXAMPLES.forEach(ex => {
+        const chip = document.createElement("button");
+        chip.className = "chip";
+        chip.type = "button";
+        chip.textContent = ex;
+        chip.addEventListener("click", () => {
+          els.input.value = ex;
+          doCompile();
+        });
+        els.examples.appendChild(chip);
+      });
+
+      // Tab switching
+      els.tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          const target = tab.dataset.tab;
+          els.tabs.forEach(t => t.classList.remove("active"));
+          els.tabPanels.forEach(p => p.classList.remove("active"));
+          tab.classList.add("active");
+          document.getElementById("tab-" + target).classList.add("active");
+        });
+      });
+
+      // Copy buttons
+      els.copyBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const type = btn.dataset.copy;
+          const text = type === "contract" ? lastCompiled.contractMd : lastCompiled.verifyJs;
+          copyToClipboard(text);
+          btn.classList.add("copied");
+          btn.textContent = "Copied";
+          showToast("Copied to clipboard");
+          setTimeout(() => { btn.classList.remove("copied"); btn.textContent = "Copy"; }, 2000);
+        });
+      });
+
+      // Compile button
+      els.btnCompile.addEventListener("click", doCompile);
+      els.input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { doCompile(); }
+      });
+
+      function doCompile() {
+        const text = els.input.value.trim();
+        if (!text) return;
+        const result = compile(text);
+        lastCompiled = result;
+        renderResult(result);
+        // Save to localStorage
+        try { localStorage.setItem(STORAGE_KEY, text); } catch(e) {}
+      }
+
+      function renderResult(result) {
+        els.emptyPanel.style.display = "none";
+        els.outputPanel.style.display = "block";
+        els.previewPanel.style.display = "block";
+        els.btnDownload.disabled = false;
+
+        // Contract tab
+        els.contractOutput.textContent = result.contractMd;
+        // Verify tab
+        els.verifyOutput.textContent = result.verifyJs;
+        // Review tab
+        els.reviewOutput.innerHTML = "";
+        const seenDims = new Set();
+        let num = 1;
+        result.review.forEach(r => {
+          if (seenDims.has(r.dim)) return;
+          seenDims.add(r.dim);
+          const li = document.createElement("li");
+          li.innerHTML = '<span class="num">' + String(num).padStart(2, "0") + '</span><div class="body"><strong>' + escapeHtml(r.dim) + '</strong> <span>' + escapeHtml(r.q) + '</span></div>';
+          els.reviewOutput.appendChild(li);
+          num++;
+        });
+        // Anti-patterns tab
+        els.antiOutput.innerHTML = "";
+        if (result.antiPatterns.length === 0) {
+          els.antiOutput.innerHTML = '<li style="border-left-color:var(--signal)"><span class="x" style="color:var(--signal)">✓</span><div class="body"><strong>No anti-patterns detected</strong><br><span style="color:var(--muted)">No specific violations were compiled for this principle.</span></div></li>';
+        } else {
+          result.antiPatterns.forEach(ap => {
+            const li = document.createElement("li");
+            li.innerHTML = '<span class="x">✗</span><div class="body"><strong>' + escapeHtml(ap.name) + '</strong><span class="detect">' + escapeHtml(ap.detect) + '</span></div>';
+            els.antiOutput.appendChild(li);
+          });
+        }
+
+        // Domains pill
+        els.domainsPill.textContent = result.domains.join(" · ");
+
+        // Domain tags
+        els.domainTags.innerHTML = "";
+        result.domains.forEach(d => {
+          const tag = document.createElement("span");
+          tag.className = "domain-tag";
+          tag.textContent = d;
+          els.domainTags.appendChild(tag);
+        });
+
+        // Tensions
+        if (result.tensions.length > 0) {
+          els.tensionsBox.style.display = "block";
+          let html = '<strong>Open tensions:</strong><ul>';
+          result.tensions.forEach(t => { html += "<li>" + escapeHtml(t) + "</li>"; });
+          html += "</ul>";
+          els.tensionsBox.innerHTML = html;
+          els.tensionsBox.className = "tensions";
+        } else {
+          els.tensionsBox.style.display = "none";
+        }
+
+        // Live preview — apply CSS vars
+        applyPreviewTokens(result.cssVars, result.domains);
+      }
+
+      function applyPreviewTokens(cssVars, domains) {
+        const sk = els.previewSkeleton;
+        // Reset
+        sk.style.removeProperty("--press-scale");
+        sk.style.removeProperty("--press-duration");
+        sk.style.removeProperty("--ease");
+        sk.style.removeProperty("--radius");
+        sk.style.removeProperty("--radius-sm");
+        sk.style.removeProperty("--leading");
+        sk.style.removeProperty("--measure");
+        sk.style.removeProperty("--section-min");
+
+        // Apply compiled vars
+        for (const [key, val] of Object.entries(cssVars)) {
+          sk.style.setProperty(key, val);
+        }
+
+        // Apply specific styles to skeleton elements
+        const btn = sk.querySelector(".sk-btn");
+        const input = sk.querySelector(".sk-input");
+        const card = sk.querySelector(".sk-card");
+
+        // Reset inline styles
+        btn.style.cssText = "";
+        input.style.cssText = "";
+        card.style.cssText = "";
+
+        // Motion domain
+        if (domains.includes("motion")) {
+          const pressScale = cssVars["--press-scale"] || "0.97";
+          const pressDur = cssVars["--press-duration"] || "160ms";
+          const ease = cssVars["--ease"] || "cubic-bezier(0.23, 1, 0.32, 1)";
+          btn.style.transition = "transform " + pressDur + " " + ease;
+          // Apply the actual press scale on :active via a dynamic style
+          let styleEl = document.getElementById("preview-motion-style");
+          if (!styleEl) {
+            styleEl = document.createElement("style");
+            styleEl.id = "preview-motion-style";
+            document.head.appendChild(styleEl);
+          }
+          styleEl.textContent = "#previewSkeleton .sk-btn:active { transform: scale(" + pressScale + "); }";
+        } else {
+          // Remove the dynamic style if motion not present
+          var styleEl2 = document.getElementById("preview-motion-style");
+          if (styleEl2) styleEl2.textContent = "";
+        }
+
+        // Shape domain
+        if (domains.includes("shape")) {
+          const radius = cssVars["--radius"] || "8px";
+          const radiusSm = cssVars["--radius-sm"] || "4px";
+          btn.style.borderRadius = radius;
+          input.style.borderRadius = radiusSm;
+          card.style.borderRadius = radiusSm;
+        }
+
+        // Color domain
+        if (domains.includes("color")) {
+          const signal = cssVars["--signal"] || "#ffc400";
+          btn.style.background = signal;
+          btn.style.color = "#000";
+        } else {
+          btn.style.background = "var(--signal)";
+          btn.style.color = "var(--signal-ink)";
+        }
+
+        // Typography domain
+        if (domains.includes("typography")) {
+          const leading = cssVars["--leading"] || "1.55";
+          const measure = cssVars["--measure"];
+          sk.querySelector(".sk-text").style.lineHeight = leading;
+          if (measure) sk.querySelector(".sk-text").style.maxWidth = measure;
+        }
+
+        // Interaction domain
+        if (domains.includes("interaction")) {
+          const focus = cssVars["--focus"];
+          if (focus) {
+            input.style.setProperty("--focus-ring", focus);
+          }
+        }
+
+        // Spacing domain
+        if (domains.includes("spacing")) {
+          const sectionMin = cssVars["--section-min"] || "64px";
+          sk.style.gap = "1.2rem";
+        }
+
+        // Acoustic domain
+        if (domains.includes("acoustic")) {
+          els.previewNotice.textContent = "Acoustic tokens compiled (not audible in preview)";
+        } else {
+          els.previewNotice.textContent = domains.length + " domain" + (domains.length > 1 ? "s" : "") + " applied";
+        }
+      }
+
+      /* ── Clipboard ────────────────────────────────────────────── */
+      function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(fallbackCopy);
+        } else {
+          fallbackCopy();
+        }
+        function fallbackCopy() {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand("copy"); } catch(e) {}
+          document.body.removeChild(ta);
+        }
+      }
+
+      /* ── Toast ────────────────────────────────────────────────── */
+      let toastTimer = null;
+      function showToast(msg) {
+        els.toast.textContent = msg;
+        els.toast.classList.add("show");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { els.toast.classList.remove("show"); }, 2000);
+      }
+
+      /* ── Escape HTML ───────────────────────────────────────────── */
+      function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      /* ── ZIP export (hand-rolled, no JSZip) ───────────────────── */
+      function crc32(data) {
+        const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
+        let crc = 0xFFFFFFFF;
+        const table = crc32.table || (crc32.table = (function() {
+          const t = new Uint32Array(256);
+          for (let i = 0; i < 256; i++) {
+            let c = i;
+            for (let j = 0; j < 8; j++) {
+              c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+            }
+            t[i] = c >>> 0;
+          }
+          return t;
+        })());
+        for (let i = 0; i < bytes.length; i++) {
+          crc = table[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        }
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
+
+      function strBytes(str) {
+        return new TextEncoder().encode(str);
+      }
+
+      function buildZip(files) {
+        // Minimal ZIP (no compression)
+        const chunks = [];
+        const central = [];
+        let offset = 0;
+
+        for (const file of files) {
+          const nameBytes = strBytes(file.name);
+          const dataBytes = strBytes(file.content);
+          const crc = crc32(dataBytes);
+          const size = dataBytes.length;
+
+          // Local file header
+          const localHdr = new Uint8Array(30 + nameBytes.length);
+          const dv = new DataView(localHdr.buffer);
+          dv.setUint32(0, 0x04034b50, true);    // signature
+          dv.setUint16(4, 20, true);            // version
+          dv.setUint16(6, 0, true);             // flags
+          dv.setUint16(8, 0, true);             // compression (store)
+          dv.setUint16(10, 0, true);            // mod time
+          dv.setUint16(12, 0, true);            // mod date
+          dv.setUint32(14, crc, true);          // crc32
+          dv.setUint32(18, size, true);         // compressed size
+          dv.setUint32(22, size, true);         // uncompressed size
+          dv.setUint16(26, nameBytes.length, true);
+          dv.setUint16(28, 0, true);            // extra field length
+          localHdr.set(nameBytes, 30);
+
+          chunks.push(localHdr);
+          chunks.push(dataBytes);
+
+          // Central directory record
+          const cdHdr = new Uint8Array(46 + nameBytes.length);
+          const cdv = new DataView(cdHdr.buffer);
+          cdv.setUint32(0, 0x02014b50, true);
+          cdv.setUint16(4, 20, true);           // version made by
+          cdv.setUint16(6, 20, true);           // version needed
+          cdv.setUint16(8, 0, true);            // flags
+          cdv.setUint16(10, 0, true);           // compression
+          cdv.setUint16(12, 0, true);
+          cdv.setUint16(14, 0, true);
+          cdv.setUint32(16, crc, true);
+          cdv.setUint32(20, size, true);
+          cdv.setUint32(24, size, true);
+          cdv.setUint16(28, nameBytes.length, true);
+          cdv.setUint16(30, 0, true);           // extra
+          cdv.setUint16(32, 0, true);           // comment
+          cdv.setUint16(34, 0, true);           // disk number
+          cdv.setUint16(36, 0, true);           // internal attrs
+          cdv.setUint32(38, 0, true);            // external attrs
+          cdv.setUint32(42, offset, true);      // local header offset
+          cdHdr.set(nameBytes, 46);
+          central.push(cdHdr);
+
+          offset += localHdr.length + dataBytes.length;
+        }
+
+        // End of central directory
+        const cdSize = central.reduce((s, c) => s + c.length, 0);
+        const eocd = new Uint8Array(22);
+        const ev = new DataView(eocd.buffer);
+        ev.setUint32(0, 0x06054b50, true);
+        ev.setUint16(4, 0, true);
+        ev.setUint16(6, 0, true);
+        ev.setUint16(8, files.length, true);
+        ev.setUint16(10, files.length, true);
+        ev.setUint32(12, cdSize, true);
+        ev.setUint32(16, offset, true);
+        ev.setUint16(20, 0, true);
+
+        chunks.push(...central);
+        chunks.push(eocd);
+
+        return new Blob(chunks, { type: "application/zip" });
+      }
+
+      els.btnDownload.addEventListener("click", () => {
+        if (!lastCompiled) return;
+        const files = [
+          { name: "contract.md", content: lastCompiled.contractMd },
+          { name: "verify.js", content: lastCompiled.verifyJs },
+          { name: "tokens.css", content: lastCompiled.tokensCss },
+          { name: "README.txt", content:
+            "Compile — principle compiler output\n" +
+            "Generated from: " + lastCompiled.principle + "\n\n" +
+            "FILES:\n" +
+            "  contract.md  — portable contract block (Designesy format)\n" +
+            "  verify.js    — paste into browser console on any URL to verify\n" +
+            "  tokens.css   — compiled tokens as CSS custom properties\n\n" +
+            "USAGE:\n" +
+            "  1. Open any URL in your browser\n" +
+            "  2. Open DevTools (F12) → Console\n" +
+            "  3. Paste the contents of verify.js\n" +
+            "  4. Press Enter — see pass/fail report\n\n" +
+            "Lab Four: Compile — Designesy Labs\n" +
+            "https://le-vai.github.io/compile/\n"
+          },
+        ];
+        const blob = buildZip(files);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const safeName = lastCompiled.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "principle";
+        a.download = "compile_" + safeName + ".zip";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast("Downloaded");
+      });
+
+      /* ── Restore draft ────────────────────────────────────────── */
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) { els.input.value = saved; }
+      } catch(e) {}
+    </script>
+  </body>
+</html>

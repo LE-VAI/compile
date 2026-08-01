@@ -21,34 +21,89 @@
     <style>
       :root {
         color-scheme: dark;
-        --paper: #000000;
-        --surface: #050505;
-        --raised: #0c0c0c;
-        --raised-high: #121212;
-        --rail: #030303;
-        --ink: #ffffff;
-        --muted: #b3b3b3;
-        --dim: #7a7a7a;
-        --line: rgba(255, 255, 255, 0.1);
-        --line-strong: rgba(255, 255, 255, 0.18);
-        --faint: rgba(255, 255, 255, 0.05);
-        --signal: #ffc400;
-        --signal-ink: #000000;
-        --signal-soft: rgba(255, 196, 0, 0.12);
-        --shadow: 0 24px 64px rgba(0, 0, 0, 0.72);
-        --radius: 10px;
-        --radius-sm: 7px;
-        --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-        --dur-fast: 140ms;
-        --dur: 220ms;
-        --dur-slow: 360ms;
+
+        /* ── Graphite depth scale (DESIGN) ── */
+        --graphite-000: #050506;
+        --graphite-050: #0A0A0C;
+        --graphite-100: #111114;
+        --graphite-200: #14171A;
+        --graphite-300: #1A1A1F;
+        --graphite-400: #2A2A30;
+        --graphite-500: #6B6B73;
+        --graphite-600: #909098;
+        --graphite-700: #B8B8C0;
+        --graphite-800: #ECECEF;
+        --graphite-900: #F7F7F8;
+
+        /* ── Semantic surface mapping ── */
+        --paper:         #000000;
+        --surface:       var(--graphite-000);
+        --raised:        var(--graphite-050);
+        --raised-high:   var(--graphite-100);
+        --rail:          var(--graphite-300);
+
+        /* ── Text — warm white, not pure #FFF ── */
+        --ink:           #F6F4E8;
+        --muted:         var(--graphite-600);
+        --dim:           var(--graphite-500);
+
+        /* ── Borders ── */
+        --line:          rgba(255, 255, 255, 0.10);
+        --line-strong:   rgba(255, 255, 255, 0.22);
+        --line-faint:    rgba(255, 255, 255, 0.05);
+        --faint:         var(--line-faint);
+
+        /* ── Signal: yellow with semantic state variation ── */
+        --signal:        #FFC400;
+        --signal-soft:   #FFE680;     /* hover */
+        --signal-deep:   #D99A00;     /* pressed */
+        --signal-ink:    #000000;
+        --signal-glow:   rgba(255, 196, 0, 0.12);
+
+        /* ── Shadows (DESIGN hierarchy) ── */
+        --shadow-1: 0 1px 0 rgba(255,255,255,0.08) inset;
+        --shadow-2: 0 14px 40px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.065);
+        --shadow:   0 24px 64px rgba(0, 0, 0, 0.72);
+
+        /* ── Radius (DESIGN scale) ── */
+        --radius-sm:   8px;
+        --radius:      12px;
+        --radius-lg:   16px;
+        --radius-full: 999px;
+
+        /* ── Motion easings (DESIGN) ── */
+        --ease:        cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
+        --ease-settle: cubic-bezier(0.76, 0, 0.18, 1);
+        --ease-signal: cubic-bezier(0.72, 0, 0.2, 1);
+        --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+        /* ── Motion durations (DESIGN) ── */
+        --dur-instant: 80ms;
+        --dur-fast:    140ms;
+        --dur:         200ms;
+        --dur-slow:    320ms;
+        --dur-ambient: 8000ms;
+
+        /* ── Spacing (DESIGN 4px base) ── */
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-6: 24px;
+        --space-8: 48px;
+
+        /* ── Fluid typography ── */
+        --font-body: clamp(0.9375rem, 0.9vw + 0.78rem, 1.0625rem);
+        --font-display: clamp(1.75rem, 3.2vw + 0.8rem, 2.75rem);
         --pad: clamp(0.9rem, 2.4vw, 1.4rem);
-        --ui: clamp(12px, 1.1vw, 13px);
+        --ui: clamp(11px, 1.1vw, 13px);
+
         --focus: 0 0 0 2px var(--paper), 0 0 0 4px color-mix(in srgb, var(--signal) 55%, transparent);
         --tap: 44px;
-        --mono: ui-monospace, "Cascadia Mono", "SF Mono", "JetBrains Mono", Consolas, monospace;
-        --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+        --mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
+        --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
       }
 
       * { box-sizing: border-box; }
@@ -60,12 +115,47 @@
         background: var(--paper);
         color: var(--ink);
         font-family: var(--sans);
-        font-size: 15px;
+        font-size: var(--font-body);
         line-height: 1.55;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
       }
+
+      /* ── Type scale (4+ sizes, display ≥3x body) ── */
+      .display {
+        font-size: var(--font-display);
+        font-weight: 900;
+        line-height: 0.95;
+        letter-spacing: -0.03em;
+        margin: 0 0 var(--space-2);
+      }
+      .heading {
+        font-size: clamp(1.1rem, 1.6vw + 0.7rem, 1.5rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin: 0 0 var(--space-2);
+      }
+
+
+      /* ── Entrance animation (data-motion="choreographic") ── */
+      @keyframes resultEntrance {
+        from { opacity: 0; transform: translateY(8px) scale(0.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .entrance {
+        animation: resultEntrance var(--dur-slow) var(--ease-settle) both;
+      }
+
+      .skip-link {
+        position: absolute; top: -100px; left: 0;
+        background: var(--signal); color: var(--signal-ink);
+        padding: 0.5rem 1rem; border-radius: 0 0 var(--radius-sm) 0;
+        font-weight: 600; font-size: 0.85rem; z-index: 100;
+        transition: top var(--dur-fast) var(--ease-out);
+      }
+      .skip-link:focus { top: 0; }
 
       .topbar {
         position: sticky; top: 0; z-index: 50;
@@ -77,7 +167,7 @@
         border-bottom: 1px solid var(--line);
       }
       .topbar .brand { display: flex; align-items: baseline; gap: 0.5rem; }
-      .topbar .brand strong { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; }
+      .topbar .brand strong { font-size: clamp(1rem, 1.5vw + 0.6rem, 1.3rem); font-weight: 800; letter-spacing: -0.03em; }
       .topbar .brand .dot { color: var(--signal); }
       .topbar .brand span {
         font-family: var(--mono);
@@ -107,7 +197,8 @@
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        padding: 1.2rem;
+        padding: var(--space-6);
+        box-shadow: var(--shadow-1);
         min-width: 0;
         overflow: hidden;
       }
@@ -132,7 +223,7 @@
         letter-spacing: 0.1em;
         padding: 3px 8px;
         border-radius: 99px;
-        background: var(--signal-soft);
+        background: var(--signal-glow);
         color: var(--signal);
         border: 1px solid color-mix(in srgb, var(--signal) 25%, transparent);
       }
@@ -200,8 +291,10 @@
       .btn-primary {
         background: var(--signal);
         color: var(--signal-ink);
+        transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
       }
-      .btn-primary:hover { background: color-mix(in srgb, var(--signal) 88%, white); }
+      .btn-primary:hover { background: var(--signal-soft); }
+      .btn-primary:active { background: var(--signal-deep); transform: scale(0.97); }
       .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
       .btn-ghost {
         background: transparent;
@@ -502,7 +595,7 @@
         align-self: flex-start;
       }
       .preview-skeleton .sk-btn:active { transform: scale(0.97); }
-      .preview-skeleton .sk-btn:hover { filter: brightness(1.1); }
+      .preview-skeleton .sk-btn:hover { background: var(--signal-soft); }
       .preview-skeleton .sk-card {
         padding: 1rem;
         background: var(--surface);
@@ -550,13 +643,28 @@
       .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
       @media (prefers-reduced-motion: reduce) {
+        /* Tier 1 — decorative/ambient: snap to final */
         *, *::before, *::after {
-          transition-duration: 0.01ms !important;
           animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
         }
-        .preview-skeleton .sk-btn:active { transform: none; }
-        .preview-skeleton .sk-input:active { transform: none; }
-        .btn:active { transform: none; }
+        /* Tier 2 — cinematic transitions: soften to ≤200ms */
+        [data-motion="cinematic"], [data-motion="ambient"] {
+          animation: none !important;
+          transition: opacity 200ms var(--ease-out) !important;
+        }
+        /* Tier 3 — functional feedback stays intact */
+        [data-motion="functional"] {
+          transition-duration: var(--dur-fast) !important;
+        }
+        /* Keep press feedback as opacity, not transform */
+        .preview-skeleton .sk-btn:active,
+        .preview-skeleton .sk-input:active,
+        .btn:active {
+          transform: none;
+          opacity: 0.85;
+        }
       }
 
       @media (max-width: 640px) {
@@ -569,6 +677,7 @@
     </style>
   </head>
   <body>
+    <a href="#main" class="skip-link" data-motion="functional">Skip to content</a>
     <header class="topbar">
       <div class="brand">
         <strong>Compile</strong><span class="dot">.</span>
@@ -577,42 +686,42 @@
       <div class="tag">Lab Four</div>
     </header>
 
-    <div class="layout">
+    <main class="layout" id="main">
       <!-- Input -->
       <div class="panel input-panel">
         <div class="panel-header">
           <h2>State a design principle</h2>
         </div>
-        <textarea id="principleInput" placeholder="e.g. Buttons should feel physical&#10;e.g. Text rhythm should hold at every size&#10;e.g. Color roles should not compete&#10;&#10;Press Enter to compile · Shift+Enter for new line"></textarea>
+        <textarea id="principleInput" aria-label="Design principle input" placeholder="e.g. Buttons should feel physical&#10;e.g. Text rhythm should hold at every size&#10;e.g. Color roles should not compete&#10;&#10;Press Enter to compile · Shift+Enter for new line"></textarea>
         <div class="examples" id="examples"></div>
         <div class="btn-row">
-          <button class="btn btn-primary" id="btnCompile" type="button">Compile</button>
-          <button class="btn btn-ghost" id="btnDownload" type="button" disabled>Download</button>
-          <button class="btn btn-ghost" id="btnClear" type="button">Clear</button>
+          <button class="btn btn-primary" id="btnCompile" type="button" data-motion="functional">Compile</button>
+          <button class="btn btn-ghost" id="btnDownload" type="button" disabled data-motion="functional">Download</button>
+          <button class="btn btn-ghost" id="btnClear" type="button" data-motion="functional">Clear</button>
         </div>
       </div>
 
       <!-- Output -->
-      <div class="panel output-panel" id="outputPanel" style="display:none;">
+      <div class="panel output-panel" id="outputPanel" style="display:none;" data-motion="choreographic">
         <div class="panel-header">
           <h2>Compiled contract</h2>
           <span class="pill" id="domainsPill">—</span>
         </div>
         <div class="domain-tags" id="domainTags"></div>
-        <div class="tabs">
-          <button class="tab active" data-tab="contract">Contract</button>
-          <button class="tab" data-tab="verify">Verify</button>
-          <button class="tab" data-tab="review">Review</button>
-          <button class="tab" data-tab="anti">Anti-patterns</button>
+        <div class="tabs" role="tablist" aria-label="Compiled output sections">
+          <button class="tab active" data-tab="contract" role="tab" aria-selected="true" id="tabbtn-contract">Contract</button>
+          <button class="tab" data-tab="verify" role="tab" aria-selected="false" id="tabbtn-verify">Verify</button>
+          <button class="tab" data-tab="review" role="tab" aria-selected="false" id="tabbtn-review">Review</button>
+          <button class="tab" data-tab="anti" role="tab" aria-selected="false" id="tabbtn-anti">Anti-patterns</button>
         </div>
-        <div class="tab-panel active" id="tab-contract">
+        <div class="tab-panel active" id="tab-contract" role="tabpanel" aria-labelledby="tabbtn-contract">
           <div class="code-block">
             <button class="copy-btn" data-copy="contract">Copy</button>
             <pre id="contractOutput"></pre>
           </div>
           <div id="tensionsBox" style="display:none;"></div>
         </div>
-        <div class="tab-panel" id="tab-verify">
+        <div class="tab-panel" id="tab-verify" role="tabpanel" aria-labelledby="tabbtn-verify" hidden>
           <div class="verify-instructions">
             <strong>1.</strong> Copy the script below.<br>
             <strong>2.</strong> Open any website in your browser.<br>
@@ -625,10 +734,10 @@
             <pre id="verifyOutput"></pre>
           </div>
         </div>
-        <div class="tab-panel" id="tab-review">
+        <div class="tab-panel" id="tab-review" role="tabpanel" aria-labelledby="tabbtn-review" hidden>
           <ul class="checklist" id="reviewOutput"></ul>
         </div>
-        <div class="tab-panel" id="tab-anti">
+        <div class="tab-panel" id="tab-anti" role="tabpanel" aria-labelledby="tabbtn-anti" hidden>
           <ul class="anti-list" id="antiOutput"></ul>
         </div>
       </div>
@@ -650,8 +759,8 @@
         <div class="preview-skeleton" id="previewSkeleton">
           <div class="sk-title">Preview surface</div>
           <div class="sk-text">This skeleton reflects the compiled tokens. Press the button to feel the principle.</div>
-          <input class="sk-input" type="text" placeholder="Input field" />
-          <button class="sk-btn" type="button">Press me ↳</button>
+          <input class="sk-input" type="text" placeholder="Input field" data-motion="functional" />
+          <button class="sk-btn" type="button" data-motion="functional">Press me ↳</button>
           <div class="sk-card">
             <div class="sk-card-title">Card</div>
             <div class="sk-card-body">A container with the compiled radius, surface, and border tokens applied.</div>
@@ -660,13 +769,13 @@
         <div class="token-inspector" id="tokenInspector"></div>
         <div class="sk-notice" id="previewNotice">No tokens applied</div>
       </div>
-    </div>
+    </main>
 
     <footer>
       <div class="wordmark">vai<span class="dot">.</span> · <a href="https://le-vai.github.io/compile/">le-vai.github.io/compile</a></div>
     </footer>
 
-    <div class="toast" id="toast">Copied</div>
+    <div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
 
     <script>
       "use strict";
@@ -689,33 +798,54 @@
       const SEED = {
         colors: {
           "foundation.black": "#000000",
-          "surface.black": "#0A0A0A",
-          "text.primary": "#FFFFFF",
-          "text.secondary": "#A0A0A0",
-          "signal.blue": "#0133CB",
-          "activation.yellow": "#FECC34",
-          "border.subtle": "rgba(255, 255, 255, 0.16)",
-          "focus.ring": "#0133CB",
-          "accent": "#0133CB",
+          "surface.graphite_000": "#050506",
+          "surface.graphite_050": "#0A0A0C",
+          "surface.graphite_100": "#111114",
+          "surface.graphite_200": "#14171A",
+          "text.primary": "#F6F4E8",
+          "text.secondary": "#909098",
+          "text.muted": "#6B6B73",
+          "signal.yellow": "#FFC400",
+          "signal.yellow_soft": "#FFE680",
+          "signal.yellow_deep": "#D99A00",
+          "border.subtle": "rgba(255, 255, 255, 0.10)",
+          "border.strong": "rgba(255, 255, 255, 0.22)",
+          "focus.ring": "#FFC400",
         },
         typography: {
-          "reference_display": "SF Pro Display",
-          "reference_text": "SF Pro Text",
-          "fallback": "-apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif",
+          "reference_display": "Inter",
+          "reference_text": "Inter",
+          "fallback": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          "scale_ratio": "1.250 (major third)",
+          "display_xl": "clamp(2.5rem, 5vw + 1rem, 5rem)",
+          "display_l": "clamp(2rem, 4vw + 0.8rem, 4rem)",
+          "heading": "clamp(1.1rem, 1.6vw + 0.7rem, 1.5rem)",
+          "body": "clamp(0.9375rem, 0.9vw + 0.78rem, 1.0625rem)",
+          "body_s": "0.875rem",
+          "label": "0.75rem",
+          "mono": "0.625rem",
+          "line_height.body": "1.55",
+          "line_height.heading": "1.1",
+          "tracking.heading": "-0.02em",
+          "tracking.label": "0.08em",
+          "measure": "62ch",
         },
         motion: {
-          "ease.out": "cubic-bezier(0.23, 1, 0.32, 1)",
-          "ease.in_out": "cubic-bezier(0.77, 0, 0.175, 1)",
-          "ease.drawer": "cubic-bezier(0.32, 0.72, 0, 1)",
-          "duration.button_press": "100-160ms",
-          "duration.tooltip": "125-200ms",
-          "duration.dropdown": "150-250ms",
-          "duration.modal_drawer": "200-500ms",
+          "ease.out": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "ease.in": "cubic-bezier(0.7, 0, 0.84, 0)",
+          "ease.in_out": "cubic-bezier(0.76, 0, 0.18, 1)",
+          "ease.settle": "cubic-bezier(0.76, 0, 0.18, 1)",
+          "ease.signal": "cubic-bezier(0.72, 0, 0.2, 1)",
+          "ease.spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+          "duration.instant": "80ms",
+          "duration.fast": "140ms",
+          "duration.normal": "200ms",
+          "duration.medium": "320ms",
+          "duration.slow": "480ms",
           "duration.ui_cap": "300ms",
-          "spring.default": "{ damping: 1.0, response: 0.4 }",
           "press_feedback.scale": "0.97",
-          "press_feedback.duration": "160ms",
-          "stagger.interval": "30-80ms",
+          "press_feedback.duration": "140ms",
+          "stagger.interval": "40ms",
           "entrance.min_scale": "0.9",
           "entrance.default_scale": "0.95",
         },
@@ -731,12 +861,16 @@
           "cue.reduced_motion_proxy": true,
         },
         spacing: {
-          "base": "8px",
+          "base": "4px",
+          "scale": "4, 8, 12, 16, 20, 24, 32, 48, 64, 80",
           "section_min": "64px",
         },
         rounded: {
-          "sm": "4px",
-          "md": "8px",
+          "sm": "8px",
+          "md": "12px",
+          "lg": "16px",
+          "xl": "24px",
+          "full": "999px",
         },
       };
 
@@ -879,23 +1013,23 @@
             const t = {};
             // Role assignment
             t["colors.foundation.black"] = SEED.colors["foundation.black"];
-            t["colors.surface.black"] = SEED.colors["surface.black"];
+            t["colors.surface.graphite_000"] = SEED.colors["surface.graphite_000"];
+            t["colors.surface.graphite_050"] = SEED.colors["surface.graphite_050"];
+            t["colors.surface.graphite_100"] = SEED.colors["surface.graphite_100"];
             t["colors.text.primary"] = SEED.colors["text.primary"];
             t["colors.text.secondary"] = SEED.colors["text.secondary"];
-            // Signal vs accent
-            if (/\b(signal|system|trust|intelligence|blue)\b/.test(p)) {
-              t["colors.signal.blue"] = SEED.colors["signal.blue"];
-              t["colors.focus.ring"] = SEED.colors["focus.ring"];
-            }
-            if (/\b(accent|activation|yellow|energy|focus|active)\b/.test(p)) {
-              t["colors.activation.yellow"] = SEED.colors["activation.yellow"];
-            }
+            t["colors.text.muted"] = SEED.colors["text.muted"];
+            // Signal yellow with semantic states
+            t["colors.signal.yellow"] = SEED.colors["signal.yellow"];
+            t["colors.signal.yellow_soft"] = SEED.colors["signal.yellow_soft"];
+            t["colors.signal.yellow_deep"] = SEED.colors["signal.yellow_deep"];
             // Role competition
             if (/\b(compete|competing|conflict|noise|dual|clash)\b/.test(p)) {
-              t["colors.signal.blue"] = SEED.colors["signal.blue"];
-              t["colors.activation.yellow"] = SEED.colors["activation.yellow"];
+              t["colors.signal.yellow"] = SEED.colors["signal.yellow"];
+              t["colors.signal.yellow_soft"] = SEED.colors["signal.yellow_soft"];
             }
             t["colors.border.subtle"] = SEED.colors["border.subtle"];
+            t["colors.border.strong"] = SEED.colors["border.strong"];
             return t;
           },
           antiPatterns(principle) {
@@ -905,12 +1039,12 @@
               aps.push({
                 name: "Dual signal colors",
                 description: "Two colors compete for the signal/accent role — visual noise.",
-                detect: "Two high-saturation colors (e.g. blue and yellow) both used as prominent accents in the same viewport — role competition.",
+                detect: "Two high-saturation colors both used as prominent accents in the same viewport — role competition.",
               });
               aps.push({
                 name: "Suppressed accent not suppressed",
                 description: "An accent color that should be suppressed on unified surfaces is still active.",
-                detect: "Activation yellow appears on a surface where signal blue is the dominant accent — dual-accent noise.",
+                detect: "Multiple accent colors compete for attention on the same surface — dual-accent noise.",
               });
             }
             aps.push({
@@ -940,25 +1074,36 @@
           cssVars(tokens) {
             const v = {};
             if (tokens["colors.foundation.black"]) v["--paper"] = tokens["colors.foundation.black"];
-            if (tokens["colors.surface.black"]) v["--surface"] = tokens["colors.surface.black"];
+            if (tokens["colors.surface.graphite_000"]) v["--surface"] = tokens["colors.surface.graphite_000"];
             if (tokens["colors.text.primary"]) v["--ink"] = tokens["colors.text.primary"];
             if (tokens["colors.text.secondary"]) v["--muted"] = tokens["colors.text.secondary"];
-            if (tokens["colors.signal.blue"]) v["--signal-blue"] = tokens["colors.signal.blue"];
-            if (tokens["colors.activation.yellow"]) v["--signal"] = tokens["colors.activation.yellow"];
+            if (tokens["colors.signal.yellow"]) v["--signal"] = tokens["colors.signal.yellow"];
+            if (tokens["colors.signal.yellow_soft"]) v["--signal-soft"] = tokens["colors.signal.yellow_soft"];
+            if (tokens["colors.signal.yellow_deep"]) v["--signal-deep"] = tokens["colors.signal.yellow_deep"];
             if (tokens["colors.border.subtle"]) v["--line"] = tokens["colors.border.subtle"];
             return v;
           },
           verifierChecks: [
-            `    // Check: text contrast
+            `    // Check: text contrast (walk parent chain for inherited backgrounds)
+    function effectiveBg(el) {
+      var node = el;
+      while (node && node !== document.body) {
+        var bg = getComputedStyle(node).backgroundColor;
+        if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return bg;
+        var img = getComputedStyle(node).backgroundImage;
+        if (img && img !== 'none') return '#808080'; // image bg — assume mid-gray
+        node = node.parentElement;
+      }
+      return getComputedStyle(document.body).backgroundColor || '#ffffff';
+    }
     textEls.forEach(function(el, i) {
       var style = getComputedStyle(el);
       var color = style.color;
-      var bg = style.backgroundColor;
-      if (color && bg && color !== 'rgba(0, 0, 0, 0)' && bg !== 'rgba(0, 0, 0, 0)') {
-        var ratio = contrastRatio(color, bg);
-        if (ratio < 4.5) {
-          results.push({ el: i, pass: false, rule: 'Insufficient text contrast', detail: 'Contrast ' + ratio.toFixed(1) + ':1 (need 4.5:1)' });
-        }
+      if (!color || color === 'rgba(0, 0, 0, 0)') return;
+      var bg = effectiveBg(el);
+      var ratio = contrastRatio(color, bg);
+      if (ratio < 4.5) {
+        results.push({ el: i, pass: false, rule: 'Insufficient text contrast', detail: 'Contrast ' + ratio.toFixed(1) + ':1 (need 4.5:1)' });
       }
     });`,
           ],
@@ -971,11 +1116,11 @@
             const t = {};
             t["typography.fallback"] = SEED.typography["fallback"];
             if (/\b(scale|size|heading|body|h1|h2|h3|ratio)\b/.test(p)) {
-              t["typography.scale"] = "1.250 (major third)";
+              t["typography.scale_ratio"] = SEED.typography["scale_ratio"];
             }
             if (/\b(line-height|leading|rhythm|vertical|cadence)\b/.test(p)) {
-              t["typography.line_height.body"] = "1.55";
-              t["typography.line_height.heading"] = "1.15";
+              t["typography.line_height.body"] = SEED.typography["line_height.body"];
+              t["typography.line_height.heading"] = SEED.typography["line_height.heading"];
             }
             if (/\b(tracking|letter-spacing|spacing|tight|loose)\b/.test(p)) {
               t["typography.tracking.heading"] = "-0.02em";
@@ -1073,7 +1218,7 @@
               t["spacing.section_min"] = SEED.spacing["section_min"];
             }
             if (/\b(tight|dense|compact|cramped|efficient)\b/.test(p)) {
-              t["spacing.base"] = "4px";
+              t["spacing.base"] = SEED.spacing["base"]; /* 4px */
             }
             if (/\b(loose|generous|airy|spacious|breath)\b/.test(p)) {
               t["spacing.base"] = "12px";
@@ -1115,7 +1260,7 @@
           },
           verifierChecks: [
             `    // Check: spacing consistency
-    var baseUnit = 8;
+    var baseUnit = (tokens && tokens.spacing && tokens.spacing.base) ? parseInt(tokens.spacing.base) : 4;
     document.querySelectorAll('*').forEach(function(el, i) {
       if (i > 200) return;
       var style = getComputedStyle(el);
@@ -1135,14 +1280,16 @@
             const p = principle.toLowerCase();
             const t = {};
             if (/\b(soft|round|rounded|gentle|warm|friendly|curve)\b/.test(p)) {
-              t["rounded.sm"] = "6px";
+              t["rounded.sm"] = "8px";
               t["rounded.md"] = "12px";
+              t["rounded.lg"] = "16px";
             } else if (/\b(sharp|precise|technical|tight|crisp|exact)\b/.test(p)) {
-              t["rounded.sm"] = "2px";
-              t["rounded.md"] = "4px";
+              t["rounded.sm"] = "4px";
+              t["rounded.md"] = "8px";
             } else {
               t["rounded.sm"] = SEED.rounded["sm"];
               t["rounded.md"] = SEED.rounded["md"];
+              t["rounded.lg"] = SEED.rounded["lg"];
             }
             if (/\b(pill|capsule|full|completely|rounded.full)\b/.test(p)) {
               t["rounded.pill"] = "999px";
@@ -1179,6 +1326,7 @@
             const v = {};
             if (tokens["rounded.sm"]) v["--radius-sm"] = tokens["rounded.sm"];
             if (tokens["rounded.md"]) v["--radius"] = tokens["rounded.md"];
+            if (tokens["rounded.lg"]) v["--radius-lg"] = tokens["rounded.lg"];
             if (tokens["rounded.pill"]) v["--radius-pill"] = tokens["rounded.pill"];
             return v;
           },
@@ -1202,8 +1350,8 @@
             const p = principle.toLowerCase();
             const t = {};
             t["interaction.focus_ring"] = "0 0 0 2px var(--paper), 0 0 0 4px color-mix(in srgb, var(--signal) 55%, transparent)";
-            t["interaction.hover_transition"] = "background-color 140ms var(--ease)";
-            t["interaction.press_transition"] = "transform 160ms var(--ease)";
+            t["interaction.hover_transition"] = "background-color " + SEED.motion["duration.fast"] + " " + SEED.motion["ease.out"];
+            t["interaction.press_transition"] = "transform " + SEED.motion["duration.fast"] + " " + SEED.motion["ease.out"];
             if (/\b(keyboard|tab|accessible|focus|a11y|accessibility)\b/.test(p)) {
               t["interaction.focus_visible"] = "always visible";
             }
@@ -1434,7 +1582,7 @@
             compiledTokens[domainId] = tokens;
             provenance.push({
               domain: domainId,
-              source: "Designesy design system contract v0.2.0 + general design knowledge",
+              source: "the design token system — design/docs/DESIGN_TOKENS.md",
               values: Object.keys(tokens),
             });
           }
@@ -1492,6 +1640,7 @@
           domains: detectedDomains,
           checks: compiledVerifierChecks,
           antiPatterns: dedupedAp,
+          tokens: compiledTokens,
         });
 
         // Assemble CSS tokens file
@@ -1531,9 +1680,9 @@
         md += 'principle: "' + principle.replace(/"/g, '\\"') + '"\n';
         md += "source_authority:\n";
         md += '  high:\n';
-        md += '    - "Designesy design system contract v0.2.0 — designesy.org"\n';
+        md += '    - "the design token system — 2026-07-27"\n';
         md += '  contextual:\n';
-        md += '    - "Designesy Labs framework — designesy.org/labs"\n';
+        md += '    - "VAI Design Intelligence — le-vai.github.io"\n';
         md += "compiled_domains:\n";
         domains.forEach(d => { md += "  - " + d + "\n"; });
         md += "---\n\n";
@@ -1596,12 +1745,13 @@
       }
 
       function assembleVerifier(ctx) {
-        const { name, principle, domains, checks, antiPatterns } = ctx;
+        const { name, principle, domains, checks, antiPatterns, tokens } = ctx;
         let js = "// " + name + " — verification script\n";
         js += "// Compiled from: \"" + principle + "\"\n";
         js += "// Paste into your browser console on any live URL to verify this principle.\n";
         js += "(function() {\n";
         js += "  var results = [];\n";
+        js += "  var tokens = " + JSON.stringify(tokens || {}) + ";\n";
         js += "  var interactives = document.querySelectorAll('button, [role=\"button\"], .btn, a[href]');\n";
         js += "  var textEls = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, span, div');\n";
         js += "\n";
@@ -1706,10 +1856,19 @@
       els.tabs.forEach(tab => {
         tab.addEventListener("click", () => {
           const target = tab.dataset.tab;
-          els.tabs.forEach(t => t.classList.remove("active"));
-          els.tabPanels.forEach(p => p.classList.remove("active"));
+          els.tabs.forEach(t => {
+            t.classList.remove("active");
+            t.setAttribute("aria-selected", "false");
+          });
+          els.tabPanels.forEach(p => {
+            p.classList.remove("active");
+            p.setAttribute("hidden", "");
+          });
           tab.classList.add("active");
-          document.getElementById("tab-" + target).classList.add("active");
+          tab.setAttribute("aria-selected", "true");
+          const panel = document.getElementById("tab-" + target);
+          panel.classList.add("active");
+          panel.removeAttribute("hidden");
         });
       });
 
@@ -1763,6 +1922,9 @@
       function renderResult(result) {
         els.emptyPanel.style.display = "none";
         els.outputPanel.style.display = "block";
+        els.outputPanel.classList.remove("entrance");
+        void els.outputPanel.offsetWidth; /* reflow to restart animation */
+        els.outputPanel.classList.add("entrance");
         els.previewPanel.style.display = "block";
         els.btnDownload.disabled = false;
 
@@ -1882,9 +2044,14 @@
 
         // Color
         if (domains.includes("color")) {
-          const signal = cssVars["--signal"] || "#ffc400";
+          const signal = cssVars["--signal"] || "#FFC400";
           btn.style.background = signal;
           btn.style.color = "#000";
+          // Apply semantic hover/active states
+          var sigSoft = cssVars["--signal-soft"] || "#FFE680";
+          var sigDeep = cssVars["--signal-deep"] || "#D99A00";
+          btn.onmouseenter = function() { btn.style.background = sigSoft; };
+          btn.onmouseleave = function() { btn.style.background = signal; };
         } else {
           btn.style.background = "var(--signal)";
           btn.style.color = "var(--signal-ink)";
@@ -2093,7 +2260,7 @@
             "  2. Open DevTools (F12) → Console\n" +
             "  3. Paste the contents of verify.js\n" +
             "  4. Press Enter — see pass/fail report\n\n" +
-            "Lab Four: Compile — Designesy Labs\n" +
+            "Compile — VAI Design Intelligence\n" +
             "https://le-vai.github.io/compile/\n"
           },
         ];
@@ -2117,4 +2284,4 @@
       } catch(e) {}
     </script>
   </body>
-</html>
+</html>

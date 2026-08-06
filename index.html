@@ -1618,7 +1618,7 @@
             compiledTokens[domainId] = tokens;
             provenance.push({
               domain: domainId,
-              source: "the design token system — design/docs/DESIGN_TOKENS.md",
+              source: "VAI Design Token System — designesy.org",
               values: Object.keys(tokens),
             });
           }
@@ -1716,7 +1716,7 @@
         md += 'principle: "' + principle.replace(/"/g, '\\"') + '"\n';
         md += "source_authority:\n";
         md += '  high:\n';
-        md += '    - "the design token system — 2026-07-27"\n';
+        md += '    - "VAI Design Token System — 2026-07-27"\n';
         md += '  contextual:\n';
         md += '    - "VAI Design Intelligence — le-vai.github.io"\n';
         md += "compiled_domains:\n";
@@ -1725,7 +1725,7 @@
         md += "# " + name + "\n\n";
         md += "## Principle\n";
         md += principle + "\n\n";
-        md += "Agent rule: this principle was compiled into structural tokens. Every token value below was derived from the principle's intent and the the design token system. Verify on any live URL using the compiled verification script.\n\n";
+        md += "Agent rule: this principle was compiled into structural tokens. Every token value below was derived from the principle's intent and the VAI Design Token System. Verify on any live URL using the compiled verification script.\n\n";
 
         md += "## Tokens\n";
         for (const [domain, toks] of Object.entries(tokens)) {
@@ -2311,7 +2311,7 @@
             "Compile — principle compiler output\n" +
             "Generated from: " + lastCompiled.principle + "\n\n" +
             "FILES:\n" +
-            "  contract.md  — portable contract block (DESIGN format)\n" +
+            "  contract.md  — portable contract block (VAI format)\n" +
             "  verify.js    — paste into browser console on any URL to verify\n" +
             "  tokens.css   — compiled tokens as CSS custom properties\n\n" +
             "USAGE:\n" +

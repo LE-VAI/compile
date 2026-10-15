@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>verify.js fixture: every check fails</title>
+<style>
+  /* Each rule below is the failing side of one verify.js check. */
+  /* Fixed font size: px on the root and on body. */
+  html { font-size: 16px; }
+  body { margin: 0; padding: 32px; background: #ffffff; color: #111111; font-family: system-ui, sans-serif; font-size: 14px; }
+  button { padding: 0 16px; min-height: 48px; border: 0; background: #111111; color: #ffffff; font: inherit; }
+  /* Press without transform: :active changes colour only. */
+  button:active { background: #333333; }
+  /* Focus not visible: the outline is removed and nothing replaces it. */
+  button:focus { outline: none; }
+  /* Duration > 300ms. */
+  .slow { transition: background-color 600ms ease; border-radius: 2px; }
+  /* Inconsistent radii: three different values on buttons. */
+  .mid { border-radius: 6px; }
+  /* Touch target too small (and no transition). */
+  .tiny { min-height: 0; width: 20px; height: 20px; padding: 0; border-radius: 14px; }
+  /* Entrance from scale(0). */
+  @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+  /* Insufficient text contrast: #aaa on white is 2.3:1. */
+  .faint { color: #aaaaaa; }
+  /* Line-height too tight on multi-line text. */
+  .tight { line-height: 1.1; width: 160px; }
+  /* Measure too wide. */
+  .wide { width: 1100px; }
+  /* Inconsistent spacing: 7px is off the 4px grid. */
+  .odd { margin-top: 7px; }
+</style>
+</head>
+<body>
+  <p class="faint">Low contrast text.</p>
+  <p class="tight">This paragraph is narrow and long enough to wrap onto several lines with a cramped line height.</p>
+  <p class="wide">This paragraph runs very wide, far past a comfortable measure, so each line holds well over a hundred characters of text.</p>
+  <div class="odd">Off-grid spacing.</div>
+  <button type="button" class="slow">Save</button>
+  <button type="button" class="mid">Open</button>
+  <button type="button" class="tiny">x</button>
+  <!-- Sound without preference opt-out: real audio, no stored preference and no sound control. -->
+  <audio preload="none"></audio>
+</body>
+</html>

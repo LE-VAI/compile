@@ -1,0 +1,9 @@
+{
+  "name": "compile",
+  "private": true,
+  "description": "A principle compiler. One static page, no dependencies.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node test/run.mjs"
+  }
+}

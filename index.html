@@ -716,6 +716,22 @@
         }
       }
 
+      /* Forced colours (Windows High Contrast): the system removes box-shadow, so
+         every focus ring above would vanish. Draw focus as an outline in the system
+         Highlight colour, give the borderless buttons an edge, and mark the active
+         tab with Highlight. System colours only: the user's theme wins. */
+      @media (forced-colors: active) {
+        :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+        .tab:focus-visible,
+        .code-block pre:focus-visible { outline-offset: -2px; }
+        .btn,
+        .preview-skeleton .sk-btn { border: 1px solid ButtonText; }
+        .btn:disabled { border-color: GrayText; color: GrayText; opacity: 1; }
+        .tab { border-bottom-color: Canvas; }
+        .tab.active { border-bottom-color: Highlight; }
+        .toast { border: 1px solid CanvasText; }
+      }
+
       @media (max-width: 640px) {
         .topbar .tag { display: none; }
         .layout { padding: 0.6rem; }

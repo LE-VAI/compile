@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>verify.js fixture: every check passes</title>
+<style>
+  /* Each rule below is the passing side of one verify.js check. */
+  html { font-size: 100%; }
+  body { margin: 0; padding: 32px; background: #ffffff; color: #111111; font: 1rem/1.5 system-ui, sans-serif; }
+  p { margin: 0 0 16px; max-width: 40ch; }
+  button {
+    min-width: 48px; min-height: 48px; padding: 0 16px;
+    border: 0; border-radius: 8px;
+    background: #111111; color: #ffffff; font: inherit;
+    transition: transform 140ms ease-out;
+  }
+  /* Press: the button moves on :active. */
+  button:active { transform: scale(0.97); }
+  /* Focus: the outline is removed, and :focus-visible draws a ring in its place. */
+  button:focus { outline: none; }
+  button:focus-visible { box-shadow: 0 0 0 3px #1a56db; }
+</style>
+</head>
+<body>
+  <p>Body text set in rem, with an even line height and a short measure for reading.</p>
+  <button type="button">Save</button>
+</body>
+</html>

@@ -42,6 +42,15 @@ Six examples are one click away on the page: *Buttons should feel physical*, *Te
 
 Compile is one static page. Clone the repo and open `index.html`, or serve the folder with any static server.
 
+## Test
+
+`test/run.mjs` checks the generated `verify.js`: every check must pass on `test/fixtures/pass.html`, fail on `test/fixtures/fail.html`, and give the right answer on Compile's own page. It drives Chrome through playwright-core, which the page itself does not need, so it is not a dependency:
+
+```
+npm i --no-save playwright-core
+npm test
+```
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

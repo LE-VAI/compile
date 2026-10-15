@@ -13,9 +13,14 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://le-vai.github.io/compile/" />
     <meta property="og:image" content="https://le-vai.github.io/compile/assets/og_1200x675.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta property="og:image:alt" content="compile, by VAI. The principle Buttons should feel physical compiles to press_feedback.scale 0.97, press_feedback.duration 140ms, the anti-pattern Press without transform, and a verify.js you run on any live URL." />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://le-vai.github.io/compile/assets/og_1200x675.png" />
+    <meta name="twitter:image:alt" content="compile, by VAI. The principle Buttons should feel physical compiles to press_feedback.scale 0.97, press_feedback.duration 140ms, the anti-pattern Press without transform, and a verify.js you run on any live URL." />
     <link rel="canonical" href="https://le-vai.github.io/compile/" />
+    <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
     <meta property="og:title" content="Compile" />
     <meta property="og:description" content="A principle compiler. State a principle, get a verifiable contract." />
     <meta name="twitter:title" content="Compile" />
@@ -30,7 +35,7 @@
         --graphite-200: #14171A;
         --graphite-300: #1A1A1F;
         --graphite-400: #2A2A30;
-        --graphite-500: #6B6B73;
+        --graphite-500: #83838B;   /* secondary text on dark: 4.61:1 or more on black and every graphite surface */
         --graphite-600: #909098;
         --graphite-700: #B8B8C0;
         --graphite-800: #ECECEF;
@@ -99,7 +104,10 @@
         --font-body: clamp(0.9375rem, 0.9vw + 0.78rem, 1.0625rem);
         --font-display: clamp(1.75rem, 3.2vw + 0.8rem, 3rem);
         --pad: clamp(0.9rem, 2.4vw, 1.4rem);
-        --ui: clamp(11px, 1.1vw, 13px);
+        /* Smallest text: 0.8rem follows the user's font size; the px floor holds it at
+           12.8px or more where the fluid root drops to 15px. */
+        --text-floor: max(0.8rem, 12.8px);
+        --ui: var(--text-floor);
 
         --focus: 0 0 0 2px var(--paper), 0 0 0 4px color-mix(in srgb, var(--signal) 55%, transparent);
         --tap: 44px;
@@ -207,11 +215,12 @@
 
       .panel-header {
         display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 0.5rem;
         margin-bottom: 0.8rem;
       }
       .panel-header h2 {
         margin: 0;
-        font-size: 0.82rem;
+        font-size: max(0.82rem, 12.8px);
         font-family: var(--mono);
         text-transform: uppercase;
         letter-spacing: 0.1em;
@@ -220,7 +229,7 @@
       }
       .panel-header .pill {
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: var(--text-floor);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         padding: 3px 8px;
@@ -257,7 +266,7 @@
       }
       .examples .chip {
         font-family: var(--mono);
-        font-size: 11px;
+        font-size: var(--text-floor);
         text-transform: none;
         letter-spacing: 0;
         padding: 5px 10px;
@@ -266,8 +275,9 @@
         border: 1px solid var(--line);
         color: var(--muted);
         cursor: pointer;
-        transition: all var(--dur-fast) var(--ease-out);
-        white-space: nowrap;
+        transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+        max-width: 100%;
+        text-align: left;
       }
       .examples .chip:hover {
         border-color: var(--line-strong);
@@ -329,6 +339,8 @@
         transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
       }
       .tab:hover { color: var(--muted); }
+      /* .tabs scrolls, so it clips an outer ring: draw the tab's ring inside it. */
+      .tab:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--signal) 55%, transparent); }
       .tab.active {
         color: var(--ink);
         border-bottom-color: var(--signal);
@@ -350,13 +362,16 @@
         padding: 1rem 1.1rem;
         overflow-x: auto;
         font-family: var(--mono);
-        font-size: 12.5px;
+        font-size: 0.8125rem;
         line-height: 1.6;
         color: var(--muted);
         -webkit-overflow-scrolling: touch;
         white-space: pre;
         max-width: 100%;
+        border-radius: inherit;
       }
+      /* .code-block clips an outer ring: the scrollable pre draws its ring inside. */
+      .code-block pre:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--signal) 55%, transparent); }
       .code-block pre .k { color: #79c0ff; }
       .code-block pre .s { color: #ffa657; }
       .code-block pre .c { color: var(--dim); font-style: italic; }
@@ -366,7 +381,7 @@
         position: absolute;
         top: 6px; right: 6px;
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: var(--text-floor);
         text-transform: uppercase;
         letter-spacing: 0.08em;
         padding: 4px 9px;
@@ -375,10 +390,9 @@
         border: 1px solid var(--line);
         color: var(--muted);
         cursor: pointer;
-        transition: all var(--dur-fast) var(--ease);
-        opacity: 0.5;
+        transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
       }
-      .copy-btn:hover { color: var(--signal); border-color: var(--line-strong); opacity: 1; }
+      .copy-btn:hover { color: var(--signal); border-color: var(--line-strong); }
       .copy-btn.copied { color: var(--signal); }
 
       .verify-instructions {
@@ -397,7 +411,7 @@
       }
       .verify-instructions code {
         font-family: var(--mono);
-        font-size: 0.82em;
+        font-size: var(--text-floor);
         background: var(--raised);
         padding: 2px 6px;
         border-radius: 4px;
@@ -418,7 +432,7 @@
       }
       .checklist li .num {
         font-family: var(--mono);
-        font-size: 11px;
+        font-size: var(--text-floor);
         color: var(--signal);
         font-weight: 600;
         min-width: 20px;
@@ -451,7 +465,7 @@
       .anti-list li .body .detect {
         display: block;
         font-family: var(--mono);
-        font-size: 11px;
+        font-size: var(--text-floor);
         color: var(--dim);
         margin-top: 3px;
       }
@@ -501,7 +515,7 @@
         background: linear-gradient(180deg, color-mix(in srgb, #f0ad4e 8%, var(--graphite-050)), color-mix(in srgb, #f0ad4e 4%, var(--graphite-000)));
         border: 1px solid color-mix(in srgb, #f0ad4e 22%, transparent);
         border-radius: var(--radius-sm);
-        font-size: 0.83rem;
+        font-size: max(0.83rem, 12.8px);
         color: #f0ad4e;
       }
       .tensions strong { color: #f0ad4e; }
@@ -515,7 +529,7 @@
       }
       .domain-tag {
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: var(--text-floor);
         text-transform: uppercase;
         letter-spacing: 0.08em;
         padding: 3px 8px;
@@ -533,7 +547,7 @@
         background: linear-gradient(180deg, var(--graphite-050), var(--graphite-000));
         box-shadow: var(--shadow-1), var(--shadow-2);
         display: flex; flex-direction: column; gap: var(--space-4);
-        transition: all var(--dur) var(--ease);
+        transition: gap var(--dur) var(--ease);
         min-width: 0;
         overflow: hidden;
       }
@@ -565,7 +579,7 @@
       .token-inspector.has-tokens { display: block; }
       .ti-header {
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: var(--text-floor);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--dim);
@@ -577,7 +591,7 @@
       .ti-domain:last-child { margin-bottom: 0; }
       .ti-domain-name {
         font-family: var(--mono);
-        font-size: 11px;
+        font-size: var(--text-floor);
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--signal);
@@ -589,7 +603,7 @@
         justify-content: space-between;
         gap: 0.8rem;
         font-family: var(--mono);
-        font-size: 11px;
+        font-size: var(--text-floor);
         line-height: 1.5;
         padding: 1px 0;
       }
@@ -613,7 +627,7 @@
         border-radius: var(--radius-sm);
         color: var(--ink);
         font-family: var(--sans);
-        font-size: 0.88rem;
+        font-size: 1rem;
         transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
       }
       .preview-skeleton .sk-input:focus { border-color: var(--signal); }
@@ -638,10 +652,10 @@
         border-radius: var(--radius-sm);
       }
       .preview-skeleton .sk-card .sk-card-title { font-size: 0.9rem; font-weight: 600; color: var(--ink); margin-bottom: 0.3rem; }
-      .preview-skeleton .sk-card .sk-card-body { font-size: 0.82rem; color: var(--muted); }
+      .preview-skeleton .sk-card .sk-card-body { font-size: max(0.82rem, 12.8px); color: var(--muted); }
       .preview-skeleton .sk-notice {
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: var(--text-floor);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--dim);
@@ -653,7 +667,7 @@
         text-align: center;
         padding: 2rem var(--pad) 1.5rem;
         color: var(--dim);
-        font-size: 0.78rem;
+        font-size: var(--text-floor);
       }
       footer .wordmark { color: var(--muted); }
       footer .wordmark .dot { color: var(--signal); }
@@ -706,7 +720,9 @@
         .topbar .tag { display: none; }
         .layout { padding: 0.6rem; }
         .panel { padding: 0.9rem; }
-        .code-block pre { font-size: 11.5px; }
+        .code-block pre { font-size: var(--text-floor); }
+        /* Four tabs fit across 390px at the 12.8px floor. */
+        .tab { padding-left: 0.35rem; padding-right: 0.35rem; letter-spacing: 0.06em; }
         .ti-val { max-width: 60%; }
       }
     </style>
@@ -724,7 +740,7 @@
     <main class="layout" id="main">
       <!-- Input -->
       <div class="panel input-panel">
-        <h2 class="heading" style="margin-bottom: var(--space-4);">State a design principle</h2>
+        <h1 class="heading" style="margin-bottom: var(--space-4);">State a design principle</h1>
         <textarea id="principleInput" aria-label="Design principle input" placeholder="e.g. Buttons should feel physical&#10;e.g. Text rhythm should hold at every size&#10;e.g. Color roles should not compete&#10;&#10;Press Enter to compile · Shift+Enter for new line"></textarea>
         <div class="examples" id="examples"></div>
         <div class="btn-row">
@@ -750,7 +766,7 @@
         <div class="tab-panel active" id="tab-contract" role="tabpanel" aria-labelledby="tabbtn-contract">
           <div class="code-block">
             <button class="copy-btn" data-copy="contract">Copy</button>
-            <pre id="contractOutput"></pre>
+            <pre id="contractOutput" tabindex="0" role="region" aria-label="Contract"></pre>
           </div>
           <div id="tensionsBox" style="display:none;"></div>
         </div>
@@ -764,7 +780,7 @@
           </div>
           <div class="code-block">
             <button class="copy-btn" data-copy="verify">Copy</button>
-            <pre id="verifyOutput"></pre>
+            <pre id="verifyOutput" tabindex="0" role="region" aria-label="verify.js"></pre>
           </div>
         </div>
         <div class="tab-panel" id="tab-review" role="tabpanel" aria-labelledby="tabbtn-review" hidden>
@@ -801,7 +817,7 @@
             <div class="sk-card-body">A container with the compiled radius, surface, and border tokens applied.</div>
           </div>
         </div>
-        <div class="token-inspector" id="tokenInspector"></div>
+        <div class="token-inspector" id="tokenInspector" tabindex="0" role="region" aria-label="Compiled tokens"></div>
         <div class="sk-notice" id="previewNotice">No tokens applied</div>
       </div>
     </main>
@@ -1012,14 +1028,25 @@
             return v;
           },
           verifierChecks: [
-            `    // Check: press feedback via transform
+            `    // Check: press feedback via transform. getComputedStyle(el, ':active')
+    // returns no :active styles, so read the :active rules from the stylesheets.
+    var activeRules = cssRules.filter(function(r) { return (r.selectorText || '').indexOf(':active') !== -1; });
+    var still = ['', 'none', 'initial', 'unset', 'inherit', 'revert', '1', '0', '0px', '0deg', 'scale(1)', 'translate(0)', 'translate(0px)', 'matrix(1, 0, 0, 1, 0, 0)'];
+    function movesOnPress(decl) {
+      return ['transform', 'scale', 'translate', 'rotate'].some(function(p) {
+        return still.indexOf(decl.getPropertyValue(p).trim()) === -1;
+      });
+    }
     interactives.forEach(function(el, i) {
       var style = getComputedStyle(el);
-      var activeTransform = getComputedStyle(el, ':active').transform;
-      var hasTransform = activeTransform && activeTransform !== 'none' && activeTransform !== 'matrix(1, 0, 0, 1, 0, 0)';
       var transitionDur = parseFloat(style.transitionDuration) || 0;
-      if (!hasTransform && el.tagName === 'BUTTON') {
-        results.push({ el: i, pass: false, rule: 'Press without transform', detail: el.tagName.toLowerCase() + ' has no :active transform' });
+      if (el.tagName === 'BUTTON') {
+        var pressed = activeRules.some(function(r) {
+          return movesOnPress(r.style) && stateHits(r, el, ['active']).some(function(h) { return h.state; });
+        });
+        if (!pressed) {
+          results.push({ el: i, pass: false, rule: 'Press without transform', detail: el.tagName.toLowerCase() + ' has no :active transform' });
+        }
       }
       if (transitionDur > 0.3) {
         results.push({ el: i, pass: false, rule: 'Duration > 300ms', detail: transitionDur + 's exceeds UI cap' });
@@ -1238,8 +1265,30 @@
       if (approxCh > 80 && el.textContent.trim().length > 100) {
         results.push({ el: i, pass: false, rule: 'Measure too wide', detail: '~' + approxCh + 'ch (recommended max 75ch)' });
       }
-      if (style.fontSize.indexOf('px') !== -1 && el.textContent.trim().length > 50) {
-        results.push({ el: i, pass: false, rule: 'Fixed font size', detail: 'Uses px instead of rem' });
+    });`,
+            `    // Check: fixed font size. Computed sizes are always px, so this asks how
+    // each size was authored. The root is read from the stylesheets; every
+    // other text element is measured, the root size doubled for one
+    // synchronous read and then restored: a size that does not move is set in
+    // px (or viewport units) and ignores the user's font-size setting.
+    var root = document.documentElement;
+    var rootSize = authoredValue(root, 'font-size');
+    if (rootSize && isFixedSize(rootSize)) {
+      results.push({ el: -1, pass: false, rule: 'Fixed font size', detail: 'html font-size is ' + rootSize + ', so rem sizes cannot follow the user setting' });
+    }
+    var sized = [];
+    textEls.forEach(function(el, i) {
+      if (sized.length >= 2000) return;
+      var ownText = Array.prototype.some.call(el.childNodes, function(n) { return n.nodeType === 3 && n.textContent.trim().length > 0; });
+      if (ownText) sized.push({ el: el, i: i, before: parseFloat(getComputedStyle(el).fontSize) });
+    });
+    var rootStyleAttr = root.getAttribute('style');
+    root.style.setProperty('font-size', (parseFloat(getComputedStyle(root).fontSize) || 16) * 2 + 'px', 'important');
+    sized.forEach(function(s) { s.after = parseFloat(getComputedStyle(s.el).fontSize); });
+    if (rootStyleAttr === null) root.removeAttribute('style'); else root.setAttribute('style', rootStyleAttr);
+    sized.forEach(function(s) {
+      if (s.before > 0 && Math.abs(s.after - s.before) < 0.01) {
+        results.push({ el: s.i, pass: false, rule: 'Fixed font size', detail: s.el.tagName.toLowerCase() + ' stays at ' + s.before + 'px when the root size doubles: set in px, not rem' });
       }
     });`,
           ],
@@ -1440,15 +1489,41 @@
             return v;
           },
           verifierChecks: [
-            `    // Check: focus visibility and touch targets
+            `    // Check: focus visibility and touch targets. getComputedStyle(el, ':focus-visible')
+    // returns no focus styles, so read the rules instead: an element fails when the
+    // author removes its outline (always, or on focus) and no :focus or
+    // :focus-visible rule draws another indicator (outline, box-shadow, border,
+    // background or underline). With no author rule, the browser's own ring shows.
+    var focusRules = cssRules.filter(function(r) {
+      return (r.selectorText || '').indexOf(':focus') !== -1 || r.style.getPropertyValue('outline-style') || r.style.getPropertyValue('outline-width');
+    });
+    function removesOutline(decl) {
+      var os = decl.getPropertyValue('outline-style').trim(), ow = decl.getPropertyValue('outline-width').trim();
+      return os === 'none' || os === 'hidden' || os === 'initial' || ow === '0' || ow === '0px';
+    }
+    function drawsIndicator(decl) {
+      var os = decl.getPropertyValue('outline-style').trim(), bs = decl.getPropertyValue('box-shadow').trim();
+      if (os && !removesOutline(decl)) return true;
+      if (bs && bs !== 'none' && bs !== 'initial') return true;
+      return ['border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color', 'background-color', 'background-image', 'text-decoration-line'].some(function(p) {
+        var v = decl.getPropertyValue(p).trim();
+        return v && v !== 'initial' && v !== 'none' && v !== 'transparent';
+      });
+    }
     interactives.forEach(function(el, i) {
       var rect = el.getBoundingClientRect();
       if (rect.width < 44 || rect.height < 44) {
         results.push({ el: i, pass: false, rule: 'Touch target too small', detail: el.tagName.toLowerCase() + ' is ' + Math.round(rect.width) + 'x' + Math.round(rect.height) + 'px (need 44px)' });
       }
-      var focusStyle = getComputedStyle(el, ':focus-visible');
-      if (focusStyle.outline === 'none' && !focusStyle.boxShadow) {
-        results.push({ el: i, pass: false, rule: 'Focus not visible', detail: el.tagName.toLowerCase() + ' has no :focus-visible indicator' });
+      var removed = removesOutline(el.style), drawn = false;
+      focusRules.forEach(function(r) {
+        stateHits(r, el, ['focus-visible', 'focus']).forEach(function(h) {
+          if (removesOutline(r.style)) removed = true;
+          if (h.state && drawsIndicator(r.style)) drawn = true;
+        });
+      });
+      if (removed && !drawn) {
+        results.push({ el: i, pass: false, rule: 'Focus not visible', detail: el.tagName.toLowerCase() + ' has its outline removed and no :focus-visible indicator' });
       }
     });`,
           ],
@@ -1514,12 +1589,28 @@
             return {}; // acoustic tokens don't map to CSS vars
           },
           verifierChecks: [
-            `    // Check: acoustic preference (heuristic — look for AudioContext or <audio> without preference check)
-    var hasAudio = document.querySelector('audio, [data-sound], [data-cue]') || window.AudioContext || window.webkitAudioContext;
-    if (hasAudio) {
-      var prefKey = localStorage.getItem('vai:sound');
-      if (prefKey === null) {
-        results.push({ el: -1, pass: false, rule: 'Sound without preference opt-out', detail: 'Audio detected but no sound preference key found in localStorage' });
+            `    // Check: acoustic preference. window.AudioContext exists in every browser, so it
+    // is not evidence of sound. Real audio is an <audio> element, a [data-sound] or
+    // [data-cue] hook, or an audio file the page has loaded. A page with real audio
+    // passes when the contract's preference key is stored or a sound or mute control
+    // is on the page.
+    var prefKeyName = (tokens.acoustic && tokens.acoustic['acoustic.preference_key']) || 'vai:sound';
+    var audioEls = document.querySelectorAll('audio, [data-sound], [data-cue]').length;
+    var audioFiles = 0;
+    try {
+      audioFiles = performance.getEntriesByType('resource').filter(function(e) {
+        return /[.](mp3|wav|ogg|oga|opus|m4a|aac|flac|weba)([?#]|$)/i.test(e.name);
+      }).length;
+    } catch (e) {}
+    if (audioEls + audioFiles > 0) {
+      var stored = null;
+      try { stored = localStorage.getItem(prefKeyName); } catch (e) {}
+      var soundControl = Array.prototype.some.call(document.querySelectorAll('button, [role="button"], [role="switch"], input[type="checkbox"], label'), function(el) {
+        var name = (el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('title') || '') + ' ' + el.textContent;
+        return /(^|[^a-z])(sound|audio|mute|unmute)([^a-z]|$)/i.test(name);
+      });
+      if (stored === null && !soundControl) {
+        results.push({ el: -1, pass: false, rule: 'Sound without preference opt-out', detail: (audioEls + audioFiles) + ' audio source(s), but no "' + prefKeyName + '" preference stored and no sound or mute control on the page' });
       }
     }`,
           ],
@@ -1780,6 +1871,103 @@
         return md;
       }
 
+      /* Stylesheet helpers for the verifier. getComputedStyle cannot see :active or
+         :focus-visible styles, and computed font sizes are always px, so the press,
+         focus and font-size checks read the authored rules. No backslashes in here:
+         this text lands in verify.js unchanged. */
+      const VERIFIER_HELPERS = `  // Stylesheet helpers: the press, focus and font-size checks read authored rules
+  var cssRules = [], unreadableSheets = 0;
+  function collectRules(list) {
+    Array.prototype.forEach.call(list, function(rule) {
+      if (rule.styleSheet) {
+        try { collectRules(rule.styleSheet.cssRules); } catch (e) { unreadableSheets++; }
+        return;
+      }
+      if (rule.selectorText !== undefined && rule.style) { cssRules.push(rule); return; }
+      if (rule.media && rule.media.mediaText && !window.matchMedia(rule.media.mediaText).matches) return;
+      if (typeof CSSSupportsRule !== 'undefined' && rule instanceof CSSSupportsRule && !CSS.supports(rule.conditionText)) return;
+      if (rule.cssRules) collectRules(rule.cssRules);
+    });
+  }
+  Array.prototype.forEach.call(document.styleSheets, function(sheet) {
+    if (sheet.disabled) return;
+    if (sheet.media && sheet.media.mediaText && !window.matchMedia(sheet.media.mediaText).matches) return;
+    var list;
+    try { list = sheet.cssRules; } catch (e) { unreadableSheets++; return; }
+    collectRules(list);
+  });
+  (document.adoptedStyleSheets || []).forEach(function(sheet) { collectRules(sheet.cssRules); });
+
+  // Split a selector list on its top-level commas.
+  function splitSelectors(text) {
+    var parts = [], depth = 0, cur = '';
+    for (var k = 0; k < text.length; k++) {
+      var ch = text.charAt(k);
+      if (ch === '(' || ch === '[') depth++;
+      if (ch === ')' || ch === ']') depth--;
+      if (ch === ',' && depth === 0) { parts.push(cur); cur = ''; } else { cur += ch; }
+    }
+    parts.push(cur);
+    return parts.map(function(s) { return s.trim(); }).filter(Boolean);
+  }
+  // The selectors of a rule that match el once the given state pseudo-classes are
+  // removed; each hit says whether the selector carried one of those states.
+  function stateHits(rule, el, states) {
+    var strip = states.length ? new RegExp(':(' + states.join('|') + ')(?![A-Za-z0-9_-])', 'g') : null;
+    var hits = [];
+    splitSelectors(rule.selectorText || '').forEach(function(sel) {
+      var bare = strip ? sel.replace(strip, '') : sel;
+      var hasState = bare !== sel;
+      if (/(^|[ >+~])$/.test(bare)) bare += '*';
+      try { if (el.matches(bare)) hits.push({ sel: sel, state: hasState }); } catch (e) {}
+    });
+    return hits;
+  }
+  function roughSpecificity(sel) {
+    var ids = sel.split('#').length - 1;
+    var classes = sel.split('.').length - 1 + sel.split('[').length - 1 + sel.split(':').length - 1 - 2 * (sel.split('::').length - 1);
+    return ids * 10000 + classes * 100 + 1;
+  }
+  // The authored value of one property on el: inline style, else the matching rule
+  // that wins on importance, then specificity, then source order.
+  function authoredValue(el, prop) {
+    var best = null;
+    cssRules.forEach(function(rule, order) {
+      var value = rule.style.getPropertyValue(prop);
+      if (!value) return;
+      var hits = stateHits(rule, el, []);
+      if (!hits.length) return;
+      var key = [rule.style.getPropertyPriority(prop) ? 1 : 0, Math.max.apply(null, hits.map(function(h) { return roughSpecificity(h.sel); })), order];
+      if (!best || key[0] > best.key[0] || (key[0] === best.key[0] && (key[1] > best.key[1] || (key[1] === best.key[1] && key[2] > best.key[2])))) {
+        best = { key: key, value: value };
+      }
+    });
+    var inline = el.style.getPropertyValue(prop);
+    if (inline && (!best || best.key[0] === 0 || el.style.getPropertyPriority(prop))) return resolveVars(inline, el);
+    return best ? resolveVars(best.value, el) : '';
+  }
+  function resolveVars(value, el) {
+    var cs = getComputedStyle(el);
+    for (var n = 0; n < 8 && value.indexOf('var(') !== -1; n++) {
+      var start = value.indexOf('var('), depth = 0, end = start + 3;
+      for (; end < value.length; end++) {
+        if (value.charAt(end) === '(') depth++;
+        else if (value.charAt(end) === ')' && --depth === 0) break;
+      }
+      var inner = value.slice(start + 4, end), comma = inner.indexOf(',');
+      var name = (comma === -1 ? inner : inner.slice(0, comma)).trim();
+      var fallback = comma === -1 ? '' : inner.slice(comma + 1).trim();
+      value = value.slice(0, start) + (cs.getPropertyValue(name).trim() || fallback) + value.slice(end + 1);
+    }
+    return value;
+  }
+  // px with no font-relative unit beside it (rem, em, %, ex, ch, lh) cannot scale.
+  function isFixedSize(value) {
+    var v = value.toLowerCase();
+    return /[0-9]px/.test(v) && !/[0-9.](r?em|%|ex|ch|r?lh|cap|ic)/.test(v);
+  }
+`;
+
       function assembleVerifier(ctx) {
         const { name, principle, domains, checks, antiPatterns, tokens } = ctx;
         let js = "// " + name + " — verification script\n";
@@ -1806,6 +1994,9 @@
         js += "    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n";
         js += "  }\n";
         js += "\n";
+        // The press, focus and font-size checks read stylesheets; the others do not.
+        const readsCss = checks.some(c => c.code.indexOf("cssRules") !== -1 || c.code.indexOf("authoredValue") !== -1);
+        if (readsCss) js += VERIFIER_HELPERS + "\n";
         // Insert domain checks
         checks.forEach(c => {
           js += c.code + "\n";
@@ -1817,6 +2008,7 @@
         js += "  var color = fails.length === 0 ? '#0f0' : '#f00';\n";
         js += "  console.log('%c ' + name + ' — ' + status, 'font-weight:bold;color:' + color);\n";
         js += "  console.log('Checked ' + interactives.length + ' interactive elements, ' + textEls.length + ' text elements.');\n";
+        if (readsCss) js += "  if (unreadableSheets) console.log(unreadableSheets + ' cross-origin stylesheet(s) could not be read; the press, focus and font-size checks cover the rest.');\n";
         js += "  if (fails.length) {\n";
         js += "    console.group('Violations (' + fails.length + ')');\n";
         js += "    fails.forEach(function(f) { console.log('  ✗ ' + f.rule + ': ' + f.detail); });\n";
